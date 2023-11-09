@@ -78,7 +78,10 @@ async function loadPoints(point_collection, src, n_points) {
 
 async function doLoadPoints() {
     //const src = "https://central.isample.xyz/isamples_central/thing/stream?";
-    const src = "http://localhost:8010/proxy/isamples_central/thing/stream?";
+    // lcp --proxyUrl "https://central.isample.xyz/"
+    // const src = "http://localhost:8010/proxy/isamples_central/thing/stream?";
+    // using nginx proxy
+    const src = "http://localhost:8010/isamples_central/thing/stream?";
     loadPoints(points, src, n_points);
 }
 

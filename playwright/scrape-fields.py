@@ -67,10 +67,13 @@ async def scrape_data():
         await browser.close()
 
         # Step 1: Convert fields array to an object for efficient lookup
-        fields_map = {field['label']: field for field in fields if 'label' in field}
+        # grab label if it exists, otherwise use field name
+        # fields_map = {field['label']: field for field in fields if 'label' in field}
+        fields_map = {field.get('label', field.get('field').lower()).lower(): field for field in fields}
 
         # Step 2: Iterate over results to create the desired object
-        result_object = {result: fields_map[result] for result in results if result in fields_map}
+        # result_object = {result: fields_map[result] for result in results if result in fields_map}
+        result_object = {result: fields_map.get(result.lower(), None) for result in results}
 
         # Outputting the results
         print(result_object)

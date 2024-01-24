@@ -1,4 +1,3 @@
-import json
 import logging
 import typing
 import urllib.parse
@@ -13,6 +12,7 @@ ISB_SERVER = "https://central.isample.xyz/isamples_central/"
 TIMEOUT = 10 #seconds
 USER_AGENT = "Python/3.11 isamples.examples"
 
+# in bytes, switch to POST if query string is longer than this value in the my_select method
 SWITCH_TO_POST=10000
 
 # fields used in https://central.isample.xyz/isamples_central/ui
@@ -32,7 +32,7 @@ MAJOR_FIELDS = dict([('All text fields', 'searchText'),
  ('Spatial Query', 'producedBy_samplingSite_location_rpt'),
  ('Specimen', 'hasSpecimenCategory')])
 
-# default field list to return
+# default field list to return in search results
 
 FL_DEFAULT = ('searchText',
  'authorizedBy',
@@ -79,8 +79,19 @@ FACET_RANGE_FIELDS_DEFAULT = {
 }
 
 def format_date_for_solr(date_str):
-    # Assuming the input is in a format like 'YYYY-MM-DD' or already in ISO 8601
-    # Modify this part if your input format is different
+    """
+    Format the date string for Solr.
+
+    Parameters:
+        date_str (str): The date string to be formatted.
+
+    Returns:
+        str: The formatted date string in ISO 8601 format.
+
+    Raises:
+        ValueError: If the input date string is not in the expected format.
+
+    """
     try:
         # If the date is already in ISO 8601 format, return as is
         datetime.fromisoformat(date_str)
@@ -128,11 +139,11 @@ def my_select(self, params, handler=None):
     # put no effective limit on the size of the query
     if len(params_encoded) < SWITCH_TO_POST:
         # Typical case.
-        path = "%s?%s" % (handler, params_encoded)
+        path = "%s/?%s" % (handler, params_encoded)
         return self._send_request("get", path)
     else:
         # Handles very long queries by submitting as a POST.
-        path = "%s" % handler
+        path = "%s/" % handler
         headers = {
             "Content-type": "application/x-www-form-urlencoded; charset=utf-8"
         }

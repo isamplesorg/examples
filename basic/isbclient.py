@@ -75,7 +75,7 @@ FACET_RANGE_FIELDS_DEFAULT = {
     'facet.range': 'producedBy_resultTimeRange',
     'f.producedBy_resultTimeRange.facet.range.gap': '+1YEARS',
     'f.producedBy_resultTimeRange.facet.range.start': '1800-01-01T00:00:00Z',
-    'f.producedBy_resultTimeRange.facet.range.end': '2023-01-01T00:00:00Z',
+    'f.producedBy_resultTimeRange.facet.range.end': '2024-01-01T00:00:00Z',
 }
 
 def format_date_for_solr(date_str):

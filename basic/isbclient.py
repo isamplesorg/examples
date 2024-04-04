@@ -2,11 +2,20 @@ import logging
 import typing
 import urllib.parse
 import httpx
+import requests
+import pandas as pd
 import xarray
 
 import pysolr
 from datetime import datetime
 from functools import partial
+
+import multidict
+import pysolr
+from typing import List, Optional, Tuple
+from typing import Optional
+import requests
+import pandas as pd
 
 ISB_SERVER = "https://central.isample.xyz/isamples_central/"
 TIMEOUT = 10 #seconds
@@ -282,3 +291,215 @@ class IsbClient:
         _set_values(xd, data, {})
         return xd
 
+
+
+class IsbClient2(IsbClient):
+    def __init__(self, url: str = 'https://central.isample.xyz/isamples_central/thing') -> None:
+        """
+        Initialize the IsbClient2 class.
+
+        Args:
+            url: The URL of the iSamples API.
+
+        Returns:
+            None.
+        """
+        super().__init__()
+        self.url = url
+        self.solr = pysolr.Solr(self.url, always_commit=True)
+
+    def _fq_from_kwargs(self, collection_date_start: int = 1800, collection_date_end: str = 'NOW',
+                        source: Optional[Tuple[str, ...]] = None, **kwargs) -> List[str]:
+        """ 
+        Build the filter query (fq) from a set of defaults and keyword arguments.
+
+        Args:
+            collection_date_start: The start date of the collection date range.
+            collection_date_end: The end date of the collection date range.
+            source: The source of the data.
+            **kwargs: Additional filter conditions.
+
+        Returns:
+            List of filter query strings.
+        """
+        # build fq
+        # 'field1': quote('value with spaces and special characters like &'),
+
+        # source is a tuple drawing from ['SESAR', 'OPENCONTEXT', 'GEOME', 'SMITHSONIAN']
+        if source is not None:
+            source = " or ".join([f'"{s}"' for s in source])
+
+        filter_conditions = multidict.MultiDict({
+            'producedBy_resultTimeRange': f'[{collection_date_start} TO {collection_date_end}]',  # Range query
+            'source': source,  # Boolean logic
+            '-relation_target':'*'
+        })
+
+        # update filter_conditions with kwargs
+        m = kwargs.get('_multi')
+        if m is None:
+            m = multidict.MultiDict(kwargs)
+        else:
+            del kwargs['_multi']
+            m.extend(kwargs)
+        filter_conditions.update(m)
+
+        # Convert to list of fq strings
+        fq = [f'{field}:{value}' for field, value in filter_null_values(filter_conditions).items()]
+
+        # fq = ['producedBy_resultTimeRange:[1800 TO 2023]', 'source:(OPENCONTEXT or SESAR)', '-relation_target:*']
+        return fq
+
+    def default_search_params(self, q: str = '*:*',
+                              fl: List[str] = FL_DEFAULT,
+                              fq: Optional[List[str]] = None,
+                              start: int = 0, rows: int = 20,
+                              facet_field: List[str] = FACET_FIELDS_DEFAULT,
+                              sort: str = 'id ASC',
+                              **kwargs) -> dict:
+        """
+        Generate the default search parameters.
+
+        Args:
+            q: The query string.
+            fl: The list of fields to return.
+            fq: The filter query.
+            start: The starting index of the search results.
+            rows: The number of rows to return.
+            facet_field: The fields to facet on.
+            sort: The sort order.
+            **kwargs: Additional parameters.
+
+        Returns:
+            Dictionary of search parameters.
+        """
+        if fq is None:
+            fq = self._fq_from_kwargs()
+
+        params = {
+            'q': q,
+            'fl': fl,
+            'start': start,
+            'rows': rows,
+            'fq': fq,
+            'facet': 'on',
+            'facet.field': facet_field,
+            'cursorMark': '*',
+            'sort': sort,
+        }
+
+        # update params with kwargs
+        params.update(kwargs)
+        return params
+
+    def search(self, params: Optional[dict] = None, **kwargs):
+        """
+        Perform a search.
+
+        Args:
+            params: The search parameters.
+            **kwargs: Additional parameters.
+
+        Returns:
+            Search results.
+        """
+        if params is None:
+            params = self.default_search_params(**kwargs)
+
+        # give an option to pick how to do the search
+        if kwargs.get('thingselect', False):
+            return self._request("thing/select", params)
+        else:
+            return self.solr.search(**params)
+    
+
+class ISamplesBulkHandler:
+    """
+    A class for handling bulk operations in iSamples.
+
+    Parameters:
+    - token (str): The authentication token for accessing iSamples.
+    - base_url (str, optional): The base URL for the iSamples API. Defaults to "https://central.isample.xyz/isamples_central/export".
+
+    Methods:
+    - create_download(query: str) -> str: Creates a download for the specified query.
+    - get_status(uuid: str) -> dict: Retrieves the status of a download.
+    - download_file(uuid: str, file_path: str) -> None: Downloads a file associated with the specified UUID.
+    - load_dataset_to_dataframe(file_path: str) -> pd.DataFrame: Loads a dataset from a JSON file into a pandas DataFrame.
+    """
+
+    def __init__(self, token: str, base_url: str = "https://central.isample.xyz/isamples_central/export"):
+        self.base_url = base_url
+        self.token = token
+
+    def create_download(self, query: str) -> str:
+        """
+        Creates a download for the specified query.
+
+        Parameters:
+        - query (str): The query for the download.
+
+        Returns:
+        - str: The UUID of the created download.
+
+        Raises:
+        - Exception: If the creation of the download fails.
+        """
+        headers = {"Authorization": f"Bearer {self.token}"}
+        params = {"q": query, "export_format": "jsonl"}
+        response = requests.get(f"{self.base_url}/create", headers=headers, params=params)
+        if response.status_code == 201:
+            return response.json().get("uuid")
+        else:
+            raise Exception(f"Failed to create download: {response.text}")
+
+    def get_status(self, uuid: str) -> dict:
+        """
+        Retrieves the status of a download.
+
+        Parameters:
+        - uuid (str): The UUID of the download.
+
+        Returns:
+        - dict: The status of the download.
+
+        Raises:
+        - Exception: If the retrieval of the status fails.
+        """
+        response = requests.get(f"{self.base_url}/status", params={"uuid": uuid})
+        if response.status_code in (200, 202):
+            return response.json()
+        else:
+            raise Exception(f"Failed to get status: {response.text}")
+
+    def download_file(self, uuid: str, file_path: str) -> None:
+        """
+        Downloads a file associated with the specified UUID.
+
+        Parameters:
+        - uuid (str): The UUID of the file to download.
+        - file_path (str): The path to save the downloaded file.
+
+        Raises:
+        - Exception: If the download fails.
+        """
+        response = requests.get(f"{self.base_url}/download", params={"uuid": uuid}, stream=True)
+        print ("status code", response.status_code)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        else:
+            raise Exception(f"Failed to download file: {response.text}")
+
+    def load_dataset_to_dataframe(self, file_path: str) -> pd.DataFrame:
+        """
+        Loads a dataset from a JSON file into a pandas DataFrame.
+
+        Parameters:
+        - file_path (str): The path to the JSON file.
+
+        Returns:
+        - pandas.DataFrame: The loaded dataset.
+        """
+        return pd.read_json(file_path, lines=True)

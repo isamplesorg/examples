@@ -12,7 +12,7 @@ from functools import partial
 
 import multidict
 import pysolr
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from typing import Optional
 import requests
 import pandas as pd
@@ -204,6 +204,7 @@ class IsbClient:
 
     def record_count(self, q:str)->int:
         """Number of records matching query q
+        TO DO: add support for additional parameters like fq, etc. or get rid of this method.
         """
         params = httpx.QueryParams(rows=0, q=q)
         response = self._request("thing/select", params)
@@ -392,7 +393,7 @@ class IsbClient2(IsbClient):
         params.update(kwargs)
         return params
 
-    def search(self, params: Optional[dict] = None, **kwargs):
+    def search(self, params: Optional[dict] = None, **kwargs) -> Union[pysolr.Results, dict]:
         """
         Perform a search.
 
@@ -401,17 +402,17 @@ class IsbClient2(IsbClient):
             **kwargs: Additional parameters.
 
         Returns:
-            Search results.
+            Search results, which can be either a pysolr.Results object or a dictionary coming from thing/select.
         """
         if params is None:
             params = self.default_search_params(**kwargs)
-
         # give an option to pick how to do the search
         if kwargs.get('thingselect', False):
             return self._request("thing/select", params)
         else:
             return self.solr.search(**params)
-    
+
+
 
 class ISamplesBulkHandler:
     """

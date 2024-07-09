@@ -412,7 +412,24 @@ class IsbClient2(IsbClient):
         else:
             return self.solr.search(**params)
 
+    def record_count(self, params: Optional[dict] = None, **kwargs)->int:
+        """
+        Calculate the number of records matching the given search parameters.
 
+        Args:
+            params: The search parameters.
+            **kwargs: Additional parameters.
+
+        Returns:
+            The number of records matching the search parameters.
+        """
+
+        response = self.search(params, **kwargs)
+
+        if isinstance(response, pysolr.Results):
+            return response.hits
+        else:
+            return response.get("response", {}).get("numFound", -1)
 
 class ISamplesBulkHandler:
     """

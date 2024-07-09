@@ -431,6 +431,40 @@ class IsbClient2(IsbClient):
         else:
             return response.get("response", {}).get("numFound", -1)
 
+    def facets(self, params: Optional[dict] = None, **kwargs) -> typing.Dict[str, typing.Dict[str, int]]:
+        """Get facet values and counts for the records based on the search parameters.
+        Deduce the fields in question from params
+
+
+        Response is a dict of dicts:
+        {
+            field_name: {
+                facet_value: count,
+                ...
+            },
+            ...
+        }
+        """
+        params["rows"] = 0
+        params["facet"] = "true"
+        params["facet.mincount"] = 0
+
+        # use the thing/select handler
+        kwargs['thingselect'] = True
+        response = self.search(params, **kwargs)
+
+        res = {}
+        for field in params.get("facet.field", []):
+            counts = {}
+            vals = response.get("facet_counts",{}).get("facet_fields",{}).get(field, [])
+            for i in range(0, len(vals), 2):
+                k = vals[i]
+                v = vals[i+1]
+                counts[k] = v
+            res[field] = counts
+        return res
+
+
 class ISamplesBulkHandler:
     """
     A class for handling bulk operations in iSamples.

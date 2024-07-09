@@ -464,6 +464,64 @@ class IsbClient2(IsbClient):
             res[field] = counts
         return res
 
+    def pivot(self, params: dict, dimensions: typing.List[str], **kwargs)-> xarray.DataArray:
+        """Return an n-dimensional xarray of counts for specified fields
+        """
+
+        def _normalize_facet(v:str):
+            return v.strip().lower()
+
+        def _get_coordinates(data, dimensions, coordinates):
+            """Get the coordinate index values from the facet response.
+            """
+            for entry in data:
+                v = _normalize_facet(entry.get("value"))
+                f = entry.get("field")
+                if f is not None and v not in coordinates[f]:
+                    coordinates[f].append(v)
+                _get_coordinates(entry.get("pivot", []), dimensions, coordinates)
+
+        def _value_structure(dimensions, coordinates, cdim=0):
+            """Populate an empty value structure for holding the facet counts
+            """
+            nvalues = len(coordinates[dimensions[cdim]])
+            if cdim >= len(dimensions)-1:
+                return [0,]*nvalues
+            return [_value_structure(dimensions, coordinates, cdim=cdim+1)]*nvalues
+
+        def _set_values(values, data, coord):
+            """Populate the xarray with the facet count values.
+            """
+            for entry in data:
+                coord[entry.get("field")] = _normalize_facet(entry.get("value"))
+                p = entry.get("pivot", None)
+                if p is None:
+                    values.loc[coord] = values.loc[coord]  + entry.get("count")
+                else:
+                    _set_values(values, p, coord)
+                coord.popitem()
+
+        if len(dimensions) < 2:
+            raise ValueError("At least two dimensions required for pivot.")
+
+        params["rows"] = 0
+        params["facet"] = "true"
+        params["facet.mincount"] = 0
+        params["facet.pivot"] = ",".join(dimensions)
+
+        # use the thing/select handler
+        kwargs['thingselect'] = True
+        response = self.search(params, **kwargs)
+
+        fkey = ",".join(dimensions)
+        data = response.get("facet_counts", {}).get("facet_pivot", {}).get(fkey, [])
+        coordinates = {k:[] for k in dimensions}
+        _get_coordinates(data, dimensions, coordinates)
+        values = _value_structure(dimensions, coordinates)
+        xd = xarray.DataArray(values, coords=coordinates, dims=dimensions)
+        _set_values(xd, data, {})
+        return xd
+
 
 class ISamplesBulkHandler:
     """

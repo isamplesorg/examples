@@ -17,3 +17,8 @@ ipydatagrid
 ipywidgets
 openpyxl
 ipytree
+jupytext
+geopandas
+pyarrow
+duckdb
+polars

@@ -22,3 +22,5 @@ geopandas
 pyarrow
 duckdb
 polars
+geopy
+

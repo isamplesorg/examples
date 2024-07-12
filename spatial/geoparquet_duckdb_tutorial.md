@@ -1,4 +1,4 @@
-# Python + GeoParquet + DuckDB: A Comprehensive Tutorial
+# Comprehensive Python + GeoParquet + DuckDB Tutorial
 
 ## 1. Introduction
 
@@ -43,7 +43,7 @@ GeoParquet offers several advantages over alternative formats such as JSON, JSON
 To set up our environment, we need to install the following packages:
 
 ```bash
-pip install geopandas pyarrow duckdb pandas polars shapely
+pip install geopandas pyarrow duckdb pandas polars shapely geopy pyproj
 ```
 
 ### 2.2 Importing Necessary Modules
@@ -57,6 +57,9 @@ import polars as pl
 import pyarrow as pa
 import duckdb
 import shapely
+import numpy as np
+from geopy.distance import geodesic
+import pyproj
 ```
 
 ## 3. Working with GeoParquet and DuckDB
@@ -117,14 +120,39 @@ In our DuckDB query, we use the `ST_GeomFromWKB` function. Here's why it's neces
 
 ## 4. Processing GeoParquet with Different Tools
 
-### 4.1 Using Pandas and GeoPandas
+Now, let's explore how to process our GeoParquet file using different Python libraries and compare their approaches. We'll start with a simple Haversine distance calculation as a reference point, then move on to more native and accurate methods for each platform.
 
-Pandas can read Parquet files directly, but it doesn't natively understand the geometry column. We'll need to use GeoPandas to properly interpret the geometry data and perform accurate spatial operations.
+### 4.0 Haversine Distance Calculation (Reference)
+
+First, let's implement a Haversine distance function that we'll use as a reference point:
+
+```python
+import numpy as np
+
+def haversine_distance(lon1, lat1, lon2, lat2):
+    R = 6371  # Earth's radius in kilometers
+    
+    lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+    
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    
+    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
+    
+    return R * c
+```
+
+This Haversine function provides a good approximation for distances on Earth, assuming a spherical Earth. It's a useful "back-of-the-envelope" calculation, but it can have errors up to 0.5% due to the Earth's ellipsoidal shape.
+
+Now, let's proceed with more accurate, native calculations for each platform.
+
+### 4.1 Using Pandas and GeoPandas
 
 ```python
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point
+from geopy.distance import geodesic
 
 # Read the GeoParquet file
 pdf = pd.read_parquet('cities.geoparquet')
@@ -140,31 +168,31 @@ print(gdf)
 print("\nCities with longitude < 0:")
 print(gdf[gdf.geometry.x < 0])
 
-# Calculate distances between cities
-# First, we need to project our data to a coordinate system that preserves distance
-# We'll use the World Equidistant Cylindrical projection (EPSG:4087)
-gdf_projected = gdf.to_crs(epsg=4087)
-tokyo_point = Point(139.6917, 35.6895)
-tokyo_projected = gpd.GeoDataFrame(geometry=[tokyo_point], crs="EPSG:4326").to_crs(epsg=4087)
+# Calculate distances using Haversine (reference)
+tokyo_coords = (139.6917, 35.6895)
+gdf['haversine_distance_km'] = gdf.apply(
+    lambda row: haversine_distance(row.geometry.x, row.geometry.y, 
+                                   tokyo_coords[0], tokyo_coords[1]), 
+    axis=1
+)
 
-gdf_projected['distance_to_tokyo'] = gdf_projected.geometry.distance(tokyo_projected.geometry.iloc[0])
+# Calculate distances using geodesic (more accurate)
+tokyo_coords_geodesic = (35.6895, 139.6917)  # Note: geodesic uses (lat, lon) order
+gdf['geodesic_distance_km'] = gdf.apply(
+    lambda row: geodesic(tokyo_coords_geodesic, (row.geometry.y, row.geometry.x)).kilometers,
+    axis=1
+)
 
-# Convert distance to kilometers
-gdf_projected['distance_to_tokyo_km'] = gdf_projected['distance_to_tokyo'] / 1000
-
-print("\nDistances to Tokyo:")
-print(gdf_projected[['city', 'distance_to_tokyo_km']])
+print("\nDistances to Tokyo (in kilometers):")
+print(gdf[['city', 'haversine_distance_km', 'geodesic_distance_km']])
 ```
 
 ### 4.2 Using Polars
 
-Polars is a fast dataframe library written in Rust. It can read Parquet files efficiently, but like pandas, it doesn't natively understand the geometry column. We'll need to handle the WKB data explicitly and implement our own distance calculation.
-
 ```python
 import polars as pl
 from shapely import wkb
-import pyarrow as pa
-import math
+import pyproj
 
 # Read the GeoParquet file
 df = pl.read_parquet('cities.geoparquet')
@@ -176,19 +204,13 @@ def wkb_to_coords(wkb_data):
     point = wkb.loads(wkb_data)
     return (point.x, point.y)
 
-# Haversine formula for distance calculation
-def haversine_distance(lon1, lat1, lon2, lat2):
-    R = 6371  # Earth's radius in kilometers
+# Set up the geodesic distance calculator
+geod = pyproj.Geod(ellps='WGS84')
 
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    a = math.sin(delta_phi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-
-    return R * c
+# Function to calculate geodesic distance
+def geodesic_distance(lon1, lat1, lon2, lat2):
+    _, _, distance = geod.inv(lon1, lat1, lon2, lat2)
+    return distance / 1000  # Convert to kilometers
 
 # Extract coordinates from the geometry column
 df_with_coords = df.with_columns([
@@ -206,21 +228,30 @@ print(df_with_coords)
 print("\nCities with longitude < 0:")
 print(df_with_coords.filter(pl.col('longitude') < 0))
 
-# Calculate distances using Haversine formula
+# Calculate distances using Haversine (reference)
 tokyo_coords = (139.6917, 35.6895)
 df_with_distances = df_with_coords.with_columns([
     pl.struct(['longitude', 'latitude'])
     .map_elements(lambda x: haversine_distance(x['longitude'], x['latitude'], tokyo_coords[0], tokyo_coords[1]))
-    .alias('distance_to_tokyo_km')
+    .alias('haversine_distance_km')
+])
+
+# Calculate distances using geodesic distance (more accurate)
+df_with_distances = df_with_distances.with_columns([
+    pl.struct(['longitude', 'latitude'])
+    .map_elements(lambda x: geodesic_distance(x['longitude'], x['latitude'], tokyo_coords[0], tokyo_coords[1]))
+    .alias('geodesic_distance_km')
 ])
 
 print("\nDistances to Tokyo (in kilometers):")
-print(df_with_distances.select(['city', 'distance_to_tokyo_km']))
+print(df_with_distances.select(['city', 'haversine_distance_km', 'geodesic_distance_km']))
 ```
 
 ### 4.3 Using DuckDB
 
-Here's an expanded example using DuckDB, which includes distance calculations:
+Is there a native DuckDB approach?  **The following code is incorrect** TO DO: must study
+[Spatial Extension – DuckDB](https://duckdb.org/docs/extensions/spatial.html) to figure out 
+how to use the DuckDB `spatial` extension and understand its current limitations.
 
 ```python
 import duckdb
@@ -262,6 +293,46 @@ for row in result_distances:
 con.close()
 ```
 
+Compare that to Haversine:
+
+
+```python
+import duckdb
+
+con = duckdb.connect()
+con.execute("INSTALL spatial; LOAD spatial;")
+
+# Define haversine_distance as a UDF
+con.execute("""
+CREATE OR REPLACE FUNCTION haversine_distance(lon1, lat1, lon2, lat2) AS (
+    6371 * 2 * asin(sqrt(
+        sin((radians(lat2) - radians(lat1))/2)^2 +
+        cos(radians(lat1)) * cos(radians(lat2)) * sin((radians(lon2) - radians(lon1))/2)^2
+    ))
+)
+""")
+
+# Use the UDF in the query
+result_distances = con.execute("""
+    WITH cities AS (
+        SELECT 
+            city, 
+            ST_GeomFromWKB(geometry) as geom
+        FROM read_parquet('cities.geoparquet')
+    )
+    SELECT 
+        city, 
+        haversine_distance(ST_X(geom), ST_Y(geom), 139.6917, 35.6895) as distance_km
+    FROM cities
+""").fetchall()
+
+print("\nDistances to Tokyo:")
+for row in result_distances:
+    print(f"City: {row[0]}, Distance: {row[1]:.2f} km")
+
+con.close()
+```
+
 ## 5. Comparison of Approaches
 
 1. **GeoPandas**: 
@@ -292,6 +363,12 @@ Each approach has its strengths, and the choice depends on your specific use cas
 
 6. **Validate Results**: Cross-check results between different tools, especially when implementing custom geospatial operations.
 
+7. **Use Native Geospatial Functions**: When available, use the native geospatial functions provided by each tool. They are often optimized for performance and accuracy.
+
+8. **Understand Geodesic Calculations**: Be aware that different methods of calculating geodesic distances may yield slightly different results due to variations in the underlying algorithms and Earth models used.
+
+9. **Start Simple, Then Refine**: Begin with simple calculations (like Haversine) for quick estimates, then move to more accurate methods (like geodesic calculations) when precision is crucial.
+
 ## 7. Conclusion and Next Steps
 
 This tutorial has introduced you to working with GeoParquet data using Python, GeoPandas, Polars, and DuckDB. You've learned how to:
@@ -299,7 +376,7 @@ This tutorial has introduced you to working with GeoParquet data using Python, G
 - Create and save GeoParquet files
 - Read and process GeoParquet data using different tools
 - Perform basic spatial operations and queries
-- Calculate distances using different methods
+- Calculate distances using both simple (Haversine) and more accurate (geodesic) methods
 
 To further your learning, consider exploring:
 

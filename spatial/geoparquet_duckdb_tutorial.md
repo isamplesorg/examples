@@ -42,8 +42,20 @@ GeoParquet offers several advantages over alternative formats such as JSON, JSON
 
 To set up our environment, we need to install the following packages:
 
-```bash
-pip install geopandas pyarrow duckdb pandas polars shapely geopy pyproj
+```python
+import subprocess
+
+def in_colab():
+    try:
+        from IPython.core import getipython
+        return 'google.colab' in str(getipython.get_ipython())
+    except ImportError:
+        # Not running in an IPython environment
+        return False
+
+
+if in_colab():
+  subprocess.run(['pip', 'install', '-r', 'https://raw.githubusercontent.com/rdhyee/isamples-examples/exploratory/requirements.in'])
 ```
 
 ### 2.2 Importing Necessary Modules

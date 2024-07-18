@@ -1,4 +1,5 @@
-FROM quay.io/jupyter/minimal-notebook:2024-02-06
+FROM quay.io/jupyter/minimal-notebook:2024-07-15
+# FROM quay.io/jupyter/minimal-notebook:2024-02-06
 # FROM jupyter/minimal-notebook:2023-10-20
 # FROM jupyter/minimal-notebook:2023-06-13
 # FROM jupyter/scipy-notebook:2023-06-06

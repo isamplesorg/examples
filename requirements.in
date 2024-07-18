@@ -17,7 +17,7 @@ ipydatagrid
 ipywidgets
 openpyxl
 ipytree
-jupytext
+# jupytext==1.16.3
 geopandas
 pyarrow
 duckdb

@@ -11,11 +11,8 @@ from datetime import datetime
 from functools import partial
 
 import multidict
-import pysolr
 from typing import List, Optional, Tuple, Union
 from typing import Optional
-import requests
-import pandas as pd
 
 ISB_SERVER = "https://central.isample.xyz/isamples_central/"
 TIMEOUT = 10 #seconds

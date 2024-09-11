@@ -55,7 +55,7 @@ def in_colab():
 
 
 if in_colab():
-  subprocess.run(['pip', 'install', '-r', 'https://raw.githubusercontent.com/rdhyee/isamples-examples/exploratory/requirements.in'])
+  subprocess.run(['pip', 'install', '-r', 'https://raw.githubusercontent.com/rdhyee/isamples-rdhyee/exploratory/requirements.in'])
 ```
 
 ### 2.2 Importing Necessary Modules

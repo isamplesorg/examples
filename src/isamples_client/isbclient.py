@@ -1,3 +1,13 @@
+# add an __ALL__ variable to the module
+__ALL__ = [
+    'IsbClient', 'IsbClient2', 'ISamplesBulkHandler',
+    'ISB_SERVER', 'TIMEOUT', 'USER_AGENT', 'SWITCH_TO_POST', 'MAJOR_FIELDS',
+    'FL_DEFAULT',
+    'FACET_FIELDS_DEFAULT', 'FACET_RANGE_FIELDS_DEFAULT', 'SWITCH_TO_POST',
+    'format_date_for_solr', 'filter_null_values', 'monkey_patch_select',
+    'create_date_range_query', 'ISAMPLES_SOURCES', 'my_select'
+]
+
 import logging
 import typing
 import urllib.parse

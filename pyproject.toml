@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "isamples_client"
+version = "0.1.0"
+description = "This is a Python wrapper for the iSamples API (documented at https://central.isample.xyz/isamples_central/docs)"
+authors = ["Raymond Yee <raymond.yee@gmail.com>"]
+readme = "README.md"
+packages = [{include = "isamples_client", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

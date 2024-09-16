@@ -1,6 +1,10 @@
 # ISBClient is the main class to interact
 # with the iSamples API
-import importlib
+import importlib.metadata
+
+# Get the version of the package
+# __name__ contains the name of the package
+__version__ = importlib.metadata.version(__name__.split('.')[0])
 
 # ISBClient has an __ALL__ list of all the classes
 # import all variables from __ALL__ list

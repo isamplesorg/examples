@@ -41,8 +41,25 @@ RUN apt-get update && \
 #     git+https://github.com/rdhyee/noidy.git@pip-package#egg=noidy
 
 # Install the required Python packages
+# Install pipx
+RUN python -m pip install --user pipx && \
+    python -m pipx ensurepath
+
+# Add pipx to PATH
+ENV PATH="/root/.local/bin:$PATH"
+
+# Use pipx to install Poetry
+RUN pipx install poetry
+
+# Copy pyproject.toml and poetry.lock if it exists
+COPY pyproject.toml poetry.lock* ./
+
+# Set the PATH again to ensure it's available in the current shell
+RUN export PATH="/root/.local/bin:$PATH" && \
+    poetry install --no-root
+
+# Install dependencies from requirements.in
+COPY requirements.in ./
 RUN pip install -r requirements.in
-
-
 
 VOLUME ["/home/jovan/work", "/data"]

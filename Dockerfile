@@ -27,11 +27,11 @@ COPY pyproject.toml poetry.lock* ./
 
 # Install project dependencies using Poetry
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi
+    poetry install --no-interaction --no-ansi --with examples
 
 # Install dependencies from requirements.in if it exists
-COPY requirements.in ./
-RUN if [ -f requirements.in ]; then pip install --upgrade -r requirements.in; fi
+# COPY requirements.in ./
+# RUN if [ -f requirements.in ]; then pip install --upgrade -r requirements.in; fi
 
 # Create necessary directories and set permissions
 RUN mkdir -p /home/jovyan/.local/share/jupyter && \

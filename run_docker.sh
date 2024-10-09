@@ -2,7 +2,7 @@
 
 set -e
 docker build --no-cache -f Dockerfile -t rdhyee/isamples-examples .
-PORT=${1:-8888}
+PORT=${1:-8890}
 
 # export EZID_USER=op://OpenContext/EZID-for-OpenContext/username
 # export EZID_PASSWD=op://OpenContext/EZID-for-OpenContext/credential

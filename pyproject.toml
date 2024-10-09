@@ -6,13 +6,50 @@ authors = ["Raymond Yee <raymond.yee@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+# Main dependencies here
+python = ">=3.9,<4.0"
 httpx = "*"
 requests = "*"
 pandas = "*"
 xarray = "*"
 pysolr = "*"
 multidict = "*"
+
+[tool.poetry.group.examples.dependencies]
+# Example code dependencies here
+noid = {git = "https://github.com/rdhyee/noid-1.git", rev = "master"}
+click = "8.0.3"
+colorama = "0.4.4"
+pytest = "*"
+ezid_client_tools = {git = "https://github.com/rdhyee/ezid-client-tools.git", rev = "installable"}
+noidy = {git = "https://github.com/rdhyee/noidy.git", rev = "pip-package"}
+# isamples_client = {git = "https://github.com/rdhyee/isamples-python.git", rev = "exploratory"}
+xarray = "*"
+matplotlib = "*"
+pandas = "*"
+requests = "*"
+httpx = "*"
+multidict = "*"
+pysolr = "*"
+anywidget = {version = "*", extras = ["dev"]}
+ipyleaflet = "*"
+ipydatagrid = "*"
+ipywidgets = "*"
+openpyxl = "*"
+ipytree = "*"
+# jupytext = "1.16.3"
+geopandas = "*"
+pyarrow = "*"
+duckdb = "*"
+polars = "*"
+geopy = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+# Development dependencies here
+
+[tool.poetry.group.test.dependencies]
+# Testing dependencies here
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

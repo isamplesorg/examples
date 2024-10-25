@@ -1,8 +1,8 @@
-from isamples_client import IsbClient
+from isamples_client import IsbClient2
 
 
 def test_field_names():
-    client = IsbClient()
+    client = IsbClient2()
     fields = client.field_names()
     assert isinstance(fields, list)
     assert len(fields) > 0

@@ -23,7 +23,7 @@ colorama = "0.4.4"
 pytest = "*"
 ezid_client_tools = {git = "https://github.com/rdhyee/ezid-client-tools.git", rev = "installable"}
 noidy = {git = "https://github.com/rdhyee/noidy.git", rev = "pip-package"}
-isamples_client = {git = "https://github.com/rdhyee/isamples-python.git", rev = "exploratory"}
+# isamples_client = {git = "https://github.com/rdhyee/isamples-python.git", rev = "exploratory"}
 xarray = "*"
 matplotlib = "*"
 pandas = "*"

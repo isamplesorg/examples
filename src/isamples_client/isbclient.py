@@ -1,11 +1,23 @@
 # add an __ALL__ variable to the module
 __ALL__ = [
-    'IsbClient', 'IsbClient2', 'ISamplesBulkHandler',
-    'ISB_SERVER', 'TIMEOUT', 'USER_AGENT', 'SWITCH_TO_POST', 'MAJOR_FIELDS',
-    'FL_DEFAULT',
-    'FACET_FIELDS_DEFAULT', 'FACET_RANGE_FIELDS_DEFAULT', 'SWITCH_TO_POST',
-    'format_date_for_solr', 'filter_null_values', 'monkey_patch_select',
-    'create_date_range_query', 'ISAMPLES_SOURCES', 'my_select'
+    "IsbClient",
+    "IsbClient2",
+    "ISamplesBulkHandler",
+    "ISB_SERVER",
+    "TIMEOUT",
+    "USER_AGENT",
+    "SWITCH_TO_POST",
+    "MAJOR_FIELDS",
+    "FL_DEFAULT",
+    "FACET_FIELDS_DEFAULT",
+    "FACET_RANGE_FIELDS_DEFAULT",
+    "SWITCH_TO_POST",
+    "format_date_for_solr",
+    "filter_null_values",
+    "monkey_patch_select",
+    "create_date_range_query",
+    "ISAMPLES_SOURCES",
+    "my_select",
 ]
 
 import logging
@@ -18,81 +30,93 @@ import xarray
 
 import pysolr
 from datetime import datetime
-from functools import partial
 
 import multidict
 from typing import List, Optional, Tuple, Union
-from typing import Optional
 
 ISB_SERVER = "https://central.isample.xyz/isamples_central/"
-TIMEOUT = 10 #seconds
+TIMEOUT = 10  # seconds
 USER_AGENT = "Python/3.11 isamples.examples"
 
 # in bytes, switch to POST if query string is longer than this value in the my_select method
-SWITCH_TO_POST=10000
+SWITCH_TO_POST = 10000
 
 # fields used in https://central.isample.xyz/isamples_central/ui
 
-MAJOR_FIELDS = dict([('All text fields', 'searchText'),
- ('Collection Date', 'producedBy_resultTimeRange'),
- ('Context', 'hasContextCategory'),
- ('Identifier', 'id'),
- ('Keywords', 'keywords'),
- ('Label', 'label'),
- ('Material', 'hasMaterialCategory'),
- ('ProducedBy ResultTime',  'producedBy_resultTime'),
- ('ProducedBy SamplingSite PlaceName', 'producedBy_samplingSite_placeName'),
- ('Registrant', 'registrant'),
- ('Source', 'source'),
- ('Source Updated Time', 'sourceUpdatedTime'),
- ('Spatial Query', 'producedBy_samplingSite_location_rpt'),
- ('Specimen', 'hasSpecimenCategory')])
+MAJOR_FIELDS = dict(
+    [
+        ("All text fields", "searchText"),
+        ("Collection Date", "producedBy_resultTimeRange"),
+        ("Context", "hasContextCategory"),
+        ("Identifier", "id"),
+        ("Keywords", "keywords"),
+        ("Label", "label"),
+        ("Material", "hasMaterialCategory"),
+        ("ProducedBy ResultTime", "producedBy_resultTime"),
+        ("ProducedBy SamplingSite PlaceName", "producedBy_samplingSite_placeName"),
+        ("Registrant", "registrant"),
+        ("Source", "source"),
+        ("Source Updated Time", "sourceUpdatedTime"),
+        ("Spatial Query", "producedBy_samplingSite_location_rpt"),
+        ("Specimen", "hasSpecimenCategory"),
+    ]
+)
 
 # default field list to return in search results
 
-FL_DEFAULT = ('searchText',
- 'authorizedBy',
- 'producedBy_resultTimeRange',
- 'hasContextCategory',
- 'curation_accessContraints',
- 'curation_description_text',
- 'curation_label',
- 'curation_location',
- 'curation_responsibility',
- 'description_text',
- 'id',
- 'informalClassification',
- 'keywords',
- 'label',
- 'hasMaterialCategory',
- 'producedBy_description_text',
- 'producedBy_hasFeatureOfInterest',
- 'producedBy_label',
- 'producedBy_responsibility',
- 'producedBy_resultTime',
- 'producedBy_samplingSite_description_text',
- 'producedBy_samplingSite_label',
- 'producedBy_samplingSite_location_elevationInMeters',
- 'producedBy_samplingSite_location_latitude',
- 'producedBy_samplingSite_location_longitude',
- 'producedBy_samplingSite_placeName',
- 'registrant',
- 'samplingPurpose',
- 'source',
- 'sourceUpdatedTime',
- 'producedBy_samplingSite_location_rpt',
- 'hasSpecimenCategory')
+FL_DEFAULT = (
+    "searchText",
+    "authorizedBy",
+    "producedBy_resultTimeRange",
+    "hasContextCategory",
+    "curation_accessContraints",
+    "curation_description_text",
+    "curation_label",
+    "curation_location",
+    "curation_responsibility",
+    "description_text",
+    "id",
+    "informalClassification",
+    "keywords",
+    "label",
+    "hasMaterialCategory",
+    "producedBy_description_text",
+    "producedBy_hasFeatureOfInterest",
+    "producedBy_label",
+    "producedBy_responsibility",
+    "producedBy_resultTime",
+    "producedBy_samplingSite_description_text",
+    "producedBy_samplingSite_label",
+    "producedBy_samplingSite_location_elevationInMeters",
+    "producedBy_samplingSite_location_latitude",
+    "producedBy_samplingSite_location_longitude",
+    "producedBy_samplingSite_placeName",
+    "registrant",
+    "samplingPurpose",
+    "source",
+    "sourceUpdatedTime",
+    "producedBy_samplingSite_location_rpt",
+    "hasSpecimenCategory",
+)
 
-FACET_FIELDS_DEFAULT = ('authorizedBy', 'hasContextCategory', 'hasMaterialCategory', 'registrant', 'source', 'hasSpecimenCategory')
+FACET_FIELDS_DEFAULT = (
+    "authorizedBy",
+    "hasContextCategory",
+    "hasMaterialCategory",
+    "registrant",
+    "source",
+    "hasSpecimenCategory",
+)
 
 # https://solr.apache.org/guide/8_11/faceting.html#range-faceting
 
 FACET_RANGE_FIELDS_DEFAULT = {
-    'facet.range': 'producedBy_resultTimeRange',
-    'f.producedBy_resultTimeRange.facet.range.gap': '+1YEARS',
-    'f.producedBy_resultTimeRange.facet.range.start': '1800-01-01T00:00:00Z',
-    'f.producedBy_resultTimeRange.facet.range.end': '2024-01-01T00:00:00Z',
+    "facet.range": "producedBy_resultTimeRange",
+    "f.producedBy_resultTimeRange.facet.range.gap": "+1YEARS",
+    "f.producedBy_resultTimeRange.facet.range.start": "1800-01-01T00:00:00Z",
+    "f.producedBy_resultTimeRange.facet.range.end": "2024-01-01T00:00:00Z",
 }
+
 
 def format_date_for_solr(date_str):
     """
@@ -114,25 +138,30 @@ def format_date_for_solr(date_str):
         return date_str
     except ValueError:
         # Convert from 'YYYY-MM-DD' to ISO 8601
-        return datetime.strptime(date_str, '%Y-%m-%d').isoformat() + 'Z'
+        return datetime.strptime(date_str, "%Y-%m-%d").isoformat() + "Z"
+
 
 def create_date_range_query(start_str, end_str):
     # If start_str or end_str is blank, use '*' for open-ended range
-    start_date = format_date_for_solr(start_str) if start_str else '*'
-    end_date = format_date_for_solr(end_str) if end_str else '*'
-    return f'[{start_date} TO {end_date}]'
+    start_date = format_date_for_solr(start_str) if start_str else "*"
+    end_date = format_date_for_solr(end_str) if end_str else "*"
+    return f"[{start_date} TO {end_date}]"
+
 
 def filter_null_values(d):
-    return {k:v for k,v in d.items() if v is not None}
+    return {k: v for k, v in d.items() if v is not None}
 
-ISAMPLES_SOURCES = ['SESAR',
-    'OPENCONTEXT',
-    'GEOME',
-    'SMITHSONIAN',
+
+ISAMPLES_SOURCES = [
+    "SESAR",
+    "OPENCONTEXT",
+    "GEOME",
+    "SMITHSONIAN",
 ]
 
 logging.basicConfig(level=logging.INFO)
 L = logging.getLogger()
+
 
 def my_select(self, params, handler=None):
     """
@@ -160,12 +189,9 @@ def my_select(self, params, handler=None):
     else:
         # Handles very long queries by submitting as a POST.
         path = "%s/" % handler
-        headers = {
-            "Content-type": "application/x-www-form-urlencoded; charset=utf-8"
-        }
-        return self._send_request(
-            "post", path, body=params_encoded, headers=headers
-        )
+        headers = {"Content-type": "application/x-www-form-urlencoded; charset=utf-8"}
+        return self._send_request("post", path, body=params_encoded, headers=headers)
+
 
 # cache the original select method
 pysolr.Solr._select_orig = pysolr.Solr._select
@@ -184,32 +210,29 @@ def monkey_patch_select(active=False):
 
 
 class IsbClient:
-    """A client for iSamples.
-    """
+    """A client for iSamples."""
 
-    def __init__(self, isb_server:str=None):
+    def __init__(self, isb_server: str = None):
         self.isb_server = ISB_SERVER if isb_server is None else isb_server
         self.isb_server = self.isb_server.strip(" /") + "/"
         self.session = httpx.Client()
 
-    def _request(self, path:str, params=None)->typing.Any:
-        headers = {
-            "Accept": "application/json",
-            "User-Agent": USER_AGENT
-        }
+    def _request(self, path: str, params=None) -> typing.Any:
+        headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
         url = urllib.parse.urljoin(self.isb_server, path)
-        response = self.session.get(url, params=params, headers=headers, timeout=TIMEOUT)
+        response = self.session.get(
+            url, params=params, headers=headers, timeout=TIMEOUT
+        )
         L.info("url = %s", response.url)
         return response.json()
 
-    def field_names(self)->typing.List[str]:
-        """Return a list of field names available in the Solr endpoint.
-        """
+    def field_names(self) -> typing.List[str]:
+        """Return a list of field names available in the Solr endpoint."""
         response = self._request("thing/select/info")
-        fields = [k for k in response.get("schema",{}).get("fields", {}).keys()]
+        fields = [k for k in response.get("schema", {}).get("fields", {}).keys()]
         return fields
 
-    def record_count(self, q:str)->int:
+    def record_count(self, q: str) -> int:
         """Number of records matching query q
         TO DO: add support for additional parameters like fq, etc. or get rid of this method.
         """
@@ -217,7 +240,9 @@ class IsbClient:
         response = self._request("thing/select", params)
         return response.get("response", {}).get("numFound", -1)
 
-    def facets(self, q:str, fields:typing.List[str]) -> typing.Dict[str, typing.Dict[str, int]]:
+    def facets(
+        self, q: str, fields: typing.List[str]
+    ) -> typing.Dict[str, typing.Dict[str, int]]:
         """Get facet values and counts for the records matching query q and specified fields.
 
         Response is a dict of dicts:
@@ -237,25 +262,24 @@ class IsbClient:
         res = {}
         for field in fields:
             counts = {}
-            vals = response.get("facet_counts",{}).get("facet_fields",{}).get(field, [])
+            vals = (
+                response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
+            )
             for i in range(0, len(vals), 2):
                 k = vals[i]
-                v = vals[i+1]
+                v = vals[i + 1]
                 counts[k] = v
             res[field] = counts
         return res
 
+    def pivot(self, q: str, dimensions: typing.List[str]) -> xarray.DataArray:
+        """Return an n-dimensional xarray of counts for specified fields"""
 
-    def pivot(self, q:str, dimensions:typing.List[str])-> xarray.DataArray:
-        """Return an n-dimensional xarray of counts for specified fields
-        """
-
-        def _normalize_facet(v:str):
+        def _normalize_facet(v: str):
             return v.strip().lower()
 
         def _get_coordinates(data, dimensions, coordinates):
-            """Get the coordinate index values from the facet response.            
-            """
+            """Get the coordinate index values from the facet response."""
             for entry in data:
                 v = _normalize_facet(entry.get("value"))
                 f = entry.get("field")
@@ -264,21 +288,21 @@ class IsbClient:
                 _get_coordinates(entry.get("pivot", []), dimensions, coordinates)
 
         def _value_structure(dimensions, coordinates, cdim=0):
-            """Populate an empty value structure for holding the facet counts
-            """
+            """Populate an empty value structure for holding the facet counts"""
             nvalues = len(coordinates[dimensions[cdim]])
-            if cdim >= len(dimensions)-1:
-                return [0,]*nvalues
-            return [_value_structure(dimensions, coordinates, cdim=cdim+1)]*nvalues
+            if cdim >= len(dimensions) - 1:
+                return [
+                    0,
+                ] * nvalues
+            return [_value_structure(dimensions, coordinates, cdim=cdim + 1)] * nvalues
 
         def _set_values(values, data, coord):
-            """Populate the xarray with the facet count values.
-            """
+            """Populate the xarray with the facet count values."""
             for entry in data:
                 coord[entry.get("field")] = _normalize_facet(entry.get("value"))
                 p = entry.get("pivot", None)
                 if p is None:
-                    values.loc[coord] = values.loc[coord]  + entry.get("count")
+                    values.loc[coord] = values.loc[coord] + entry.get("count")
                 else:
                     _set_values(values, p, coord)
                 coord.popitem()
@@ -292,7 +316,7 @@ class IsbClient:
         response = self._request("thing/select", params)
         fkey = ",".join(dimensions)
         data = response.get("facet_counts", {}).get("facet_pivot", {}).get(fkey, [])
-        coordinates = {k:[] for k in dimensions}
+        coordinates = {k: [] for k in dimensions}
         _get_coordinates(data, dimensions, coordinates)
         values = _value_structure(dimensions, coordinates)
         xd = xarray.DataArray(values, coords=coordinates, dims=dimensions)
@@ -300,9 +324,10 @@ class IsbClient:
         return xd
 
 
-
 class IsbClient2(IsbClient):
-    def __init__(self, url: str = 'https://central.isample.xyz/isamples_central/thing') -> None:
+    def __init__(
+        self, url: str = "https://central.isample.xyz/isamples_central/thing"
+    ) -> None:
         """
         Initialize the IsbClient2 class.
 
@@ -316,9 +341,14 @@ class IsbClient2(IsbClient):
         self.url = url
         self.solr = pysolr.Solr(self.url, always_commit=True)
 
-    def _fq_from_kwargs(self, collection_date_start: int = 1800, collection_date_end: str = 'NOW',
-                        source: Optional[Tuple[str, ...]] = None, **kwargs) -> List[str]:
-        """ 
+    def _fq_from_kwargs(
+        self,
+        collection_date_start: int = 1800,
+        collection_date_end: str = "NOW",
+        source: Optional[Tuple[str, ...]] = None,
+        **kwargs,
+    ) -> List[str]:
+        """
         Build the filter query (fq) from a set of defaults and keyword arguments.
 
         Args:
@@ -337,34 +367,43 @@ class IsbClient2(IsbClient):
         if source is not None:
             source = " or ".join([f'"{s}"' for s in source])
 
-        filter_conditions = multidict.MultiDict({
-            'producedBy_resultTimeRange': f'[{collection_date_start} TO {collection_date_end}]',  # Range query
-            'source': source,  # Boolean logic
-            '-relation_target':'*'
-        })
+        filter_conditions = multidict.MultiDict(
+            {
+                "producedBy_resultTimeRange": f"[{collection_date_start} TO {collection_date_end}]",  # Range query
+                "source": source,  # Boolean logic
+                "-relation_target": "*",
+            }
+        )
 
         # update filter_conditions with kwargs
-        m = kwargs.get('_multi')
+        m = kwargs.get("_multi")
         if m is None:
             m = multidict.MultiDict(kwargs)
         else:
-            del kwargs['_multi']
+            del kwargs["_multi"]
             m.extend(kwargs)
         filter_conditions.update(m)
 
         # Convert to list of fq strings
-        fq = [f'{field}:{value}' for field, value in filter_null_values(filter_conditions).items()]
+        fq = [
+            f"{field}:{value}"
+            for field, value in filter_null_values(filter_conditions).items()
+        ]
 
         # fq = ['producedBy_resultTimeRange:[1800 TO 2023]', 'source:(OPENCONTEXT or SESAR)', '-relation_target:*']
         return fq
 
-    def default_search_params(self, q: str = '*:*',
-                              fl: List[str] = FL_DEFAULT,
-                              fq: Optional[List[str]] = None,
-                              start: int = 0, rows: int = 20,
-                              facet_field: List[str] = FACET_FIELDS_DEFAULT,
-                              sort: str = 'id ASC',
-                              **kwargs) -> dict:
+    def default_search_params(
+        self,
+        q: str = "*:*",
+        fl: List[str] = FL_DEFAULT,
+        fq: Optional[List[str]] = None,
+        start: int = 0,
+        rows: int = 20,
+        facet_field: List[str] = FACET_FIELDS_DEFAULT,
+        sort: str = "id ASC",
+        **kwargs,
+    ) -> dict:
         """
         Generate the default search parameters.
 
@@ -385,22 +424,24 @@ class IsbClient2(IsbClient):
             fq = self._fq_from_kwargs()
 
         params = {
-            'q': q,
-            'fl': fl,
-            'start': start,
-            'rows': rows,
-            'fq': fq,
-            'facet': 'on',
-            'facet.field': facet_field,
-            'cursorMark': '*',
-            'sort': sort,
+            "q": q,
+            "fl": fl,
+            "start": start,
+            "rows": rows,
+            "fq": fq,
+            "facet": "on",
+            "facet.field": facet_field,
+            "cursorMark": "*",
+            "sort": sort,
         }
 
         # update params with kwargs
         params.update(kwargs)
         return params
 
-    def search(self, params: Optional[dict] = None, **kwargs) -> Union[pysolr.Results, dict]:
+    def search(
+        self, params: Optional[dict] = None, **kwargs
+    ) -> Union[pysolr.Results, dict]:
         """
         Perform a search.
 
@@ -414,12 +455,12 @@ class IsbClient2(IsbClient):
         if params is None:
             params = self.default_search_params(**kwargs)
         # give an option to pick how to do the search
-        if kwargs.get('thingselect', False):
+        if kwargs.get("thingselect", False):
             return self._request("thing/select", params)
         else:
             return self.solr.search(**params)
 
-    def record_count(self, params: Optional[dict] = None, **kwargs)->int:
+    def record_count(self, params: Optional[dict] = None, **kwargs) -> int:
         """
         Calculate the number of records matching the given search parameters.
 
@@ -438,7 +479,9 @@ class IsbClient2(IsbClient):
         else:
             return response.get("response", {}).get("numFound", -1)
 
-    def facets(self, params: Optional[dict] = None, **kwargs) -> typing.Dict[str, typing.Dict[str, int]]:
+    def facets(
+        self, params: Optional[dict] = None, **kwargs
+    ) -> typing.Dict[str, typing.Dict[str, int]]:
         """Get facet values and counts for the records based on the search parameters.
         Deduce the fields in question from params
 
@@ -457,30 +500,32 @@ class IsbClient2(IsbClient):
         params["facet.mincount"] = 0
 
         # use the thing/select handler
-        kwargs['thingselect'] = True
+        kwargs["thingselect"] = True
         response = self.search(params, **kwargs)
 
         res = {}
         for field in params.get("facet.field", []):
             counts = {}
-            vals = response.get("facet_counts",{}).get("facet_fields",{}).get(field, [])
+            vals = (
+                response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
+            )
             for i in range(0, len(vals), 2):
                 k = vals[i]
-                v = vals[i+1]
+                v = vals[i + 1]
                 counts[k] = v
             res[field] = counts
         return res
 
-    def pivot(self, params: dict, dimensions: typing.List[str], **kwargs)-> xarray.DataArray:
-        """Return an n-dimensional xarray of counts for specified fields
-        """
+    def pivot(
+        self, params: dict, dimensions: typing.List[str], **kwargs
+    ) -> xarray.DataArray:
+        """Return an n-dimensional xarray of counts for specified fields"""
 
-        def _normalize_facet(v:str):
+        def _normalize_facet(v: str):
             return v.strip().lower()
 
         def _get_coordinates(data, dimensions, coordinates):
-            """Get the coordinate index values from the facet response.
-            """
+            """Get the coordinate index values from the facet response."""
             for entry in data:
                 v = _normalize_facet(entry.get("value"))
                 f = entry.get("field")
@@ -489,21 +534,21 @@ class IsbClient2(IsbClient):
                 _get_coordinates(entry.get("pivot", []), dimensions, coordinates)
 
         def _value_structure(dimensions, coordinates, cdim=0):
-            """Populate an empty value structure for holding the facet counts
-            """
+            """Populate an empty value structure for holding the facet counts"""
             nvalues = len(coordinates[dimensions[cdim]])
-            if cdim >= len(dimensions)-1:
-                return [0,]*nvalues
-            return [_value_structure(dimensions, coordinates, cdim=cdim+1)]*nvalues
+            if cdim >= len(dimensions) - 1:
+                return [
+                    0,
+                ] * nvalues
+            return [_value_structure(dimensions, coordinates, cdim=cdim + 1)] * nvalues
 
         def _set_values(values, data, coord):
-            """Populate the xarray with the facet count values.
-            """
+            """Populate the xarray with the facet count values."""
             for entry in data:
                 coord[entry.get("field")] = _normalize_facet(entry.get("value"))
                 p = entry.get("pivot", None)
                 if p is None:
-                    values.loc[coord] = values.loc[coord]  + entry.get("count")
+                    values.loc[coord] = values.loc[coord] + entry.get("count")
                 else:
                     _set_values(values, p, coord)
                 coord.popitem()
@@ -517,12 +562,12 @@ class IsbClient2(IsbClient):
         params["facet.pivot"] = ",".join(dimensions)
 
         # use the thing/select handler
-        kwargs['thingselect'] = True
+        kwargs["thingselect"] = True
         response = self.search(params, **kwargs)
 
         fkey = ",".join(dimensions)
         data = response.get("facet_counts", {}).get("facet_pivot", {}).get(fkey, [])
-        coordinates = {k:[] for k in dimensions}
+        coordinates = {k: [] for k in dimensions}
         _get_coordinates(data, dimensions, coordinates)
         values = _value_structure(dimensions, coordinates)
         xd = xarray.DataArray(values, coords=coordinates, dims=dimensions)
@@ -545,7 +590,11 @@ class ISamplesBulkHandler:
     - load_dataset_to_dataframe(file_path: str) -> pd.DataFrame: Loads a dataset from a JSON file into a pandas DataFrame.
     """
 
-    def __init__(self, token: str, base_url: str = "https://central.isample.xyz/isamples_central/export"):
+    def __init__(
+        self,
+        token: str,
+        base_url: str = "https://central.isample.xyz/isamples_central/export",
+    ):
         self.base_url = base_url
         self.token = token
 
@@ -564,7 +613,9 @@ class ISamplesBulkHandler:
         """
         headers = {"Authorization": f"Bearer {self.token}"}
         params = {"q": query, "export_format": "jsonl"}
-        response = requests.get(f"{self.base_url}/create", headers=headers, params=params)
+        response = requests.get(
+            f"{self.base_url}/create", headers=headers, params=params
+        )
         if response.status_code == 201:
             return response.json().get("uuid")
         else:
@@ -600,8 +651,10 @@ class ISamplesBulkHandler:
         Raises:
         - Exception: If the download fails.
         """
-        response = requests.get(f"{self.base_url}/download", params={"uuid": uuid}, stream=True)
-        print ("status code", response.status_code)
+        response = requests.get(
+            f"{self.base_url}/download", params={"uuid": uuid}, stream=True
+        )
+        print("status code", response.status_code)
         if response.status_code == 200:
             with open(file_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):

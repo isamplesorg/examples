@@ -1,5 +1,5 @@
-# ISBClient is the main class to interact
-# with the iSamples API
+"""ISBClient is the main class to interact with the iSamples API"""
+
 import importlib.metadata
 
 # Get the version of the package

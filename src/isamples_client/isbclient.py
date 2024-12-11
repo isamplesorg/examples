@@ -22,17 +22,20 @@ __ALL__ = [
 
 import logging
 import typing
+from typing import List, Optional, Tuple, Union
+
 import urllib.parse
+from datetime import datetime
+
+
 import httpx
 import requests
 import pandas as pd
 import xarray
 
 import pysolr
-from datetime import datetime
 
 import multidict
-from typing import List, Optional, Tuple, Union
 
 ISB_SERVER = "https://central.isample.xyz/isamples_central/"
 TIMEOUT = 10  # seconds
@@ -142,6 +145,13 @@ def format_date_for_solr(date_str):
 
 
 def create_date_range_query(start_str, end_str):
+    """
+    Create a date range query for Solr.
+
+    Parameters:
+        start_str (str): The start date string.
+        end_str (str): The end date string.
+    """
     # If start_str or end_str is blank, use '*' for open-ended range
     start_date = format_date_for_solr(start_str) if start_str else "*"
     end_date = format_date_for_solr(end_str) if end_str else "*"
@@ -149,6 +159,9 @@ def create_date_range_query(start_str, end_str):
 
 
 def filter_null_values(d):
+    """
+    Filter out null values from a dictionary.
+    """
     return {k: v for k, v in d.items() if v is not None}
 
 
@@ -184,18 +197,15 @@ def my_select(self, params, handler=None):
     # put no effective limit on the size of the query
     if len(params_encoded) < SWITCH_TO_POST:
         # Typical case.
-        path = "%s/?%s" % (handler, params_encoded)
+        path = f"{handler}/?{params_encoded}"
+        # pylint: disable=protected-access
         return self._send_request("get", path)
+        # pylint: enable=protected-access
     else:
         # Handles very long queries by submitting as a POST.
         path = "%s/" % handler
         headers = {"Content-type": "application/x-www-form-urlencoded; charset=utf-8"}
         return self._send_request("post", path, body=params_encoded, headers=headers)
-
-
-# cache the original select method
-pysolr.Solr._select_orig = pysolr.Solr._select
-
 
 def monkey_patch_select(active=False):
     """
@@ -203,10 +213,19 @@ def monkey_patch_select(active=False):
     :param switch_to_post: if the query string is longer than this, switch to POST
     :return:
     """
+
+    # cache the original select method
+    # pylint: disable=protected-access
+    pysolr.Solr._select_orig = pysolr.Solr._select
+    # pylint: enable=protected-access
     if active:
+        # pylint: disable=protected-access
         pysolr.Solr._select = my_select
+        # pylint: enable=protected-access
     else:
+        # pylint: disable=protected-access
         pysolr.Solr._select = pysolr.Solr._select_orig
+        # pylint: enable=protected-access
 
 
 class IsbClient:
@@ -220,9 +239,7 @@ class IsbClient:
     def _request(self, path: str, params=None) -> typing.Any:
         headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
         url = urllib.parse.urljoin(self.isb_server, path)
-        response = self.session.get(
-            url, params=params, headers=headers, timeout=TIMEOUT
-        )
+        response = self.session.get(url, params=params, headers=headers, timeout=TIMEOUT)
         L.info("url = %s", response.url)
         return response.json()
 
@@ -240,9 +257,7 @@ class IsbClient:
         response = self._request("thing/select", params)
         return response.get("response", {}).get("numFound", -1)
 
-    def facets(
-        self, q: str, fields: typing.List[str]
-    ) -> typing.Dict[str, typing.Dict[str, int]]:
+    def facets(self, q: str, fields: typing.List[str]) -> typing.Dict[str, typing.Dict[str, int]]:
         """Get facet values and counts for the records matching query q and specified fields.
 
         Response is a dict of dicts:
@@ -262,9 +277,7 @@ class IsbClient:
         res = {}
         for field in fields:
             counts = {}
-            vals = (
-                response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
-            )
+            vals = response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
             for i in range(0, len(vals), 2):
                 k = vals[i]
                 v = vals[i + 1]
@@ -325,9 +338,7 @@ class IsbClient:
 
 
 class IsbClient2(IsbClient):
-    def __init__(
-        self, url: str = "https://central.isample.xyz/isamples_central/thing"
-    ) -> None:
+    def __init__(self, url: str = "https://central.isample.xyz/isamples_central/thing") -> None:
         """
         Initialize the IsbClient2 class.
 
@@ -385,10 +396,7 @@ class IsbClient2(IsbClient):
         filter_conditions.update(m)
 
         # Convert to list of fq strings
-        fq = [
-            f"{field}:{value}"
-            for field, value in filter_null_values(filter_conditions).items()
-        ]
+        fq = [f"{field}:{value}" for field, value in filter_null_values(filter_conditions).items()]
 
         # fq = ['producedBy_resultTimeRange:[1800 TO 2023]', 'source:(OPENCONTEXT or SESAR)', '-relation_target:*']
         return fq
@@ -439,9 +447,7 @@ class IsbClient2(IsbClient):
         params.update(kwargs)
         return params
 
-    def search(
-        self, params: Optional[dict] = None, **kwargs
-    ) -> Union[pysolr.Results, dict]:
+    def search(self, params: Optional[dict] = None, **kwargs) -> Union[pysolr.Results, dict]:
         """
         Perform a search.
 
@@ -506,9 +512,7 @@ class IsbClient2(IsbClient):
         res = {}
         for field in params.get("facet.field", []):
             counts = {}
-            vals = (
-                response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
-            )
+            vals = response.get("facet_counts", {}).get("facet_fields", {}).get(field, [])
             for i in range(0, len(vals), 2):
                 k = vals[i]
                 v = vals[i + 1]
@@ -516,9 +520,7 @@ class IsbClient2(IsbClient):
             res[field] = counts
         return res
 
-    def pivot(
-        self, params: dict, dimensions: typing.List[str], **kwargs
-    ) -> xarray.DataArray:
+    def pivot(self, params: dict, dimensions: typing.List[str], **kwargs) -> xarray.DataArray:
         """Return an n-dimensional xarray of counts for specified fields"""
 
         def _normalize_facet(v: str):
@@ -613,9 +615,7 @@ class ISamplesBulkHandler:
         """
         headers = {"Authorization": f"Bearer {self.token}"}
         params = {"q": query, "export_format": "jsonl"}
-        response = requests.get(
-            f"{self.base_url}/create", headers=headers, params=params
-        )
+        response = requests.get(f"{self.base_url}/create", headers=headers, params=params)
         if response.status_code == 201:
             return response.json().get("uuid")
         else:
@@ -651,9 +651,7 @@ class ISamplesBulkHandler:
         Raises:
         - Exception: If the download fails.
         """
-        response = requests.get(
-            f"{self.base_url}/download", params={"uuid": uuid}, stream=True
-        )
+        response = requests.get(f"{self.base_url}/download", params={"uuid": uuid}, stream=True)
         print("status code", response.status_code)
         if response.status_code == 200:
             with open(file_path, "wb") as f:

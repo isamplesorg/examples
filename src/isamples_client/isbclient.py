@@ -39,7 +39,7 @@ import multidict
 
 ISB_SERVER = "https://central.isample.xyz/isamples_central/"
 TIMEOUT = 10  # seconds
-USER_AGENT = "Python/3.11 isamples.examples"
+USER_AGENT = "Python/3.12 isamples.examples"
 
 # in bytes, switch to POST if query string is longer than this value in the my_select method
 SWITCH_TO_POST = 10000
@@ -439,6 +439,7 @@ class IsbClient2(IsbClient):
             "fq": fq,
             "facet": "on",
             "facet.field": facet_field,
+            "facet.mincount": 1,  # Add this line to get actual counts
             "cursorMark": "*",
             "sort": sort,
         }
@@ -503,7 +504,7 @@ class IsbClient2(IsbClient):
         """
         params["rows"] = 0
         params["facet"] = "true"
-        params["facet.mincount"] = 0
+        params["facet.mincount"] = 1  # Change this from 0 to 1 to get actual counts
 
         # use the thing/select handler
         kwargs["thingselect"] = True

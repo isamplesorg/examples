@@ -90,7 +90,7 @@ print(f"DuckDB version: {duckdb.__version__}")
 gdf = gpd.GeoDataFrame(
     {'city': ['New York', 'Paris', 'Tokyo'],
      'geometry': gpd.points_from_xy([-74.006, 2.3522, 139.6917], 
-                                    [40.7128, 48.8566, 35.6895])},
+                                  [40.7128, 48.8566, 35.6895])},
     crs="EPSG:4326"
 )
 
@@ -108,8 +108,8 @@ con.execute("LOAD spatial;")
 result = con.execute("""
     SELECT 
         city, 
-        ST_X(ST_GeomFromWKB(geometry)) as longitude, 
-        ST_Y(ST_GeomFromWKB(geometry)) as latitude
+        ST_X(geometry) as longitude, 
+        ST_Y(geometry) as latitude
     FROM read_parquet('cities.geoparquet')
 """).fetchall()
 

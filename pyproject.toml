@@ -43,7 +43,15 @@ pyarrow = "*"
 duckdb = "*"
 polars = "*"
 geopy = "*"
-
+ibis-framework = {version = "*", extras = ["duckdb", "postgres", "mysql", "sqlite", "geospatial", "examples"]}
+folium = "*"
+cartopy = "*"
+shapely = "*"
+lonboard = "*"
+palettable = "*"
+sidecar = "*"
+# datashader = "*"
+# spatialpandas = "*"
 
 [tool.poetry.group.dev.dependencies]
 # Development dependencies here

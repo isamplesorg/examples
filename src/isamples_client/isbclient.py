@@ -504,7 +504,7 @@ class IsbClient2(IsbClient):
         """
         params["rows"] = 0
         params["facet"] = "true"
-        params["facet.mincount"] = 1  # Change this from 0 to 1 to get actual counts
+        params["facet.mincount"] = 1  # Set to 1 to get actual counts
 
         # use the thing/select handler
         kwargs["thingselect"] = True
@@ -635,7 +635,8 @@ class ISamplesBulkHandler:
         Raises:
         - Exception: If the retrieval of the status fails.
         """
-        response = requests.get(f"{self.base_url}/status", params={"uuid": uuid})
+        headers = {"Authorization": f"Bearer {self.token}"}
+        response = requests.get(f"{self.base_url}/status", params={"uuid": uuid}, headers=headers)
         if response.status_code in (200, 202):
             return response.json()
         else:

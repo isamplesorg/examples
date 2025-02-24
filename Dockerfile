@@ -10,7 +10,7 @@ RUN chown -R ${NB_UID} ${HOME}
 
 # Update package list and install required dependencies
 RUN apt-get update && \
-    apt-get install -y software-properties-common libdb-dev libzmq3-dev curl libssl-dev zlib1g-dev jq jupyter-console && \
+    apt-get install -y software-properties-common libdb-dev libzmq3-dev curl libssl-dev zlib1g-dev jq jupyter-console pkg-config default-libmysqlclient-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

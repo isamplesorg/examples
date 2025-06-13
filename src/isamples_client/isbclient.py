@@ -207,6 +207,7 @@ def my_select(self, params, handler=None):
         headers = {"Content-type": "application/x-www-form-urlencoded; charset=utf-8"}
         return self._send_request("post", path, body=params_encoded, headers=headers)
 
+
 def monkey_patch_select(active=False):
     """
     :param active: if True, monkey patch pysolr.Solr._select
@@ -338,7 +339,13 @@ class IsbClient:
 
 
 class IsbClient2(IsbClient):
-    def __init__(self, url: str = "https://central.isample.xyz/isamples_central/thing") -> None:
+    """
+    A client for iSamples using pysolr."""
+    def __init__(
+        self,
+        url: str = "https://central.isample.xyz/isamples_central/thing",
+        isb_server: str = None,
+    ) -> None:
         """
         Initialize the IsbClient2 class.
 
@@ -348,7 +355,7 @@ class IsbClient2(IsbClient):
         Returns:
             None.
         """
-        super().__init__()
+        super().__init__(isb_server)
         self.url = url
         self.solr = pysolr.Solr(self.url, always_commit=True)
 

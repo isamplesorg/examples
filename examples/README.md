@@ -178,11 +178,28 @@ except requests.exceptions.ConnectionError:
 - **Interactive maps**: Implement zoom-based level-of-detail rendering
 - **Memory usage**: Sample data for initial exploration, full dataset for final analysis
 
+## 🌐 Try These Patterns in Your Browser
+
+Many of the analysis patterns demonstrated in these notebooks have **browser-based equivalents** in our companion website:
+
+**[iSamples Interactive Tutorials](https://smrgeoinfo.github.io/isamplesorg.github.io/tutorials/)**
+- Same datasets, zero installation required
+- Observable JS + DuckDB-WASM for in-browser analysis  
+- Perfect for sharing analyses or trying concepts quickly
+- **Performance**: Analyze 300MB datasets in <100MB browser memory
+
+**Learning Path**: 
+1. **Start here** for deep analysis and Python ecosystem power
+2. **Share results** via website tutorials for broader accessibility
+3. **Rapid prototyping** in browser, then **advanced analysis** locally
+
 ## 🔗 Related Documentation
 
 - [Main README](../README.md) - Repository overview
 - [STATUS.md](../STATUS.md) - Current issues and WIP areas  
 - [CLAUDE.md](../CLAUDE.md) - Development guidance
+- [CROSS_REPO_ALIGNMENT.md](../CROSS_REPO_ALIGNMENT.md) - Website integration strategy
+- [DATA_SOURCES.md](../DATA_SOURCES.md) - Shared data documentation
 - [Lonboard Documentation](https://github.com/developmentseed/lonboard)
 - [DuckDB Spatial Extension](https://duckdb.org/docs/extensions/spatial)
 

@@ -83,6 +83,22 @@ This repository is transitioning from API-dependent to **offline-first geoparque
 
 See [STATUS.md](STATUS.md) for detailed WIP status and loose ends.
 
+## Ecosystem Integration
+
+### Companion Repository: [isamplesorg.github.io](https://github.com/isamplesorg/isamplesorg.github.io)
+**Public website with browser-based tutorials and documentation**
+
+**Complementary roles**:
+- 🔗 **This repo (`isamples-python`)**: Local development, advanced analysis, Python ecosystem
+- 🌐 **Website repo**: Public tutorials, universal browser access, educational content  
+
+**Shared technology**: Both use DuckDB + geoparquet for efficient data analysis
+- Same data sources (Zenodo archives, HTTP range requests)
+- Compatible visualization approaches (lonboard ↔ Observable Plot)
+- Coordinated development patterns
+
+See [CROSS_REPO_ALIGNMENT.md](CROSS_REPO_ALIGNMENT.md) for detailed integration strategy.
+
 ## Related Projects
 
 - [iSamples](https://www.isamples.org/) - Internet of Samples project

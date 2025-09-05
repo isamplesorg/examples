@@ -162,3 +162,17 @@ cython_debug/
 # mac
 .DS_Store
 
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Claude Code temporary files
+.claude/
+
+# Office temporary files
+~$*.xlsx
+~$*.docx
+~$*.pptx
+

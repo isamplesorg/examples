@@ -1,0 +1,103 @@
+metadata = {
+    # Basic Information (Required Fields)
+    "title": "Complete export of records from the iSamples project (https://isamples.org/)",  # Required
+    "description": "This dataset contains daily temperature and precipitation measurements collected from weather stations across North America between January 2020 and December 2024.",  # Required
+    "upload_type": "dataset",  # Required: Options include dataset, publication, image, poster, presentation, video, software
+    
+    # Creators/Authors (At least one required)
+    "creators": [
+        {
+            "name": "Internet of Samples (iSamples)",
+        }
+    ],
+    
+    # Access and License
+    "access_right": "open",  # Options: open, embargoed, restricted, closed
+    "license": "cc-by-4.0",  # Recommended for open data
+    
+    # Publication Information
+    "publication_date": "2025-04-24",  # ISO format: YYYY-MM-DD
+    
+    # Version Information
+    "version": "1.0.0",  # Version of your dataset
+    
+    # Keywords for Better Discoverability
+    "keywords": ["climate", "weather", "temperature", "precipitation", "North America"],
+    
+    # Language of the Resource
+    "language": "eng",  # ISO 639-3 language code
+    
+    # Related Identifiers (Papers, Code, etc.)
+    "related_identifiers": [
+        {
+            "identifier": "10.1234/example.paper",
+            "relation": "isSupplementTo",  # Relationship to your dataset
+            "scheme": "doi"  # Identifier scheme (doi, url, etc.)
+        },
+        {
+            "identifier": "https://github.com/username/code-repository",
+            "relation": "isDocumentedBy",
+            "scheme": "url"
+        }
+    ],
+    
+    # Additional Contributors (Not Authors)
+    "contributors": [
+        {
+            "name": "Johnson, Emily",
+            "affiliation": "Data Science Lab",
+            "type": "DataCollector"  # Role type
+        }
+    ],
+    
+    # Subject Classification
+    "subjects": [
+        {
+            "term": "Earth and Environmental Sciences",
+            "identifier": "http://id.loc.gov/authorities/subjects/sh85040989",
+            "scheme": "url"
+        }
+    ],
+    
+    # Funding Information
+    "grants": [
+        {
+            "id": "123456",  # Grant ID
+            "funder": {
+                "name": "National Science Foundation",
+                "identifier": "501100001809",
+                "scheme": "isni"
+            }
+        }
+    ],
+    
+    # Geographical Coverage
+    "locations": [
+        {
+            "description": "North America",
+            "place": "North America",
+            "point": {
+                "lon": -100.0,
+                "lat": 40.0
+            }
+        }
+    ],
+    
+    # Temporal Coverage
+    "dates": [
+        {
+            "start": "2020-01-01",
+            "end": "2024-12-31",
+            "type": "Collected",
+            "description": "Data collection period"
+        }
+    ],
+    
+    # Additional Information
+    "notes": "Data was collected using calibrated weather stations with hourly measurements aggregated to daily values.",
+    
+    # If you want to add to a specific Zenodo community
+    "communities": [
+        {"identifier": "climate-data"}  # Replace with actual community identifier
+    ]
+}

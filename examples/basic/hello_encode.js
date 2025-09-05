@@ -1,0 +1,5 @@
+var plantumlEncoder = require('plantuml-encoder')
+
+// encoded = "BOj12i8m44Ml8hDk8LONqgLw0X4tfSWqcKfWcfGu4OjuTwUjo_VV-yq763jYgE4KcScAZs5pHY4eeFV4JisOeikMt76w9tfcbgiVw8BXCKSoZQIDqqkPvgtiqPAe6Nou8MUrsuCnolZ-SsMgVG6l5Ph5whHhl-qF";
+encoded = "JKzTYy8m4Fmh9SyjLC-7uzxywAiUMeu3AR8cMmricv9iZyhXVtTRjVgKdPdDpEp-Nn4SaTINcXD5Z1r7fKKoGSLg64G925wVSz64v4k3ml4T_G6rFTJ0wXg_p9QE23LRLqShO7mpQxmphKQpk1myXfOujnLkeJxXozp8byJtN5A2nZweilNFFMlocQQ2eNlWQJgTZKNsWohKHz7N6IzmhTTl0MG3ZzR3ktEUHR2rmKuuBVsX2R9R0WMCnyDsJwTdeDfyP-lbPfrdlxaghiKD";
+console.log(plantumlEncoder.decode(encoded)) 

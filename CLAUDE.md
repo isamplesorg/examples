@@ -27,6 +27,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Default port is 8890, custom port can be specified as first argument
 - Dockerfile creates a Jupyter environment with all dependencies installed
 
+## Current Status & Issues ⚠️
+
+**IMPORTANT**: As of September 2025, the iSamples central API at `https://central.isample.xyz/isamples_central/` is offline. This affects all three client classes below. The repository is transitioning to **offline-first geoparquet workflows** - see examples in `examples/basic/geoparquet.ipynb` and `examples/basic/isample-archive.ipynb` for working patterns.
+
 ## Architecture Overview
 
 ### Core Python Client (`src/isamples_client/`)
@@ -64,8 +68,9 @@ The main Python package provides three client classes for interacting with the i
 Heavy emphasis on Jupyter notebook examples for data exploration:
 - Interactive data analysis with pandas, xarray
 - Geospatial analysis using geopandas, folium, cartopy
-- Data visualization with matplotlib, ipyleaflet
-- DuckDB integration for efficient parquet processing
+- **Lonboard WebGL visualization**: High-performance point cloud rendering
+- **DuckDB integration**: Efficient remote parquet processing via HTTP range requests
+- **API-independent workflows**: Examples that work without central API access
 
 ### Dependencies Architecture
 - **Core dependencies**: httpx, requests, pandas, xarray, pysolr
@@ -90,3 +95,19 @@ The codebase uses a sophisticated parameter building system:
 - `monkey_patch_select()` modifies pysolr to handle large queries via POST
 - `SWITCH_TO_POST` threshold (10000 bytes) determines GET vs POST usage
 - Critical for handling complex search queries that exceed URL limits
+
+## Known Issues & Troubleshooting
+
+### API Connectivity Issues
+- **Central API offline**: If you see connection errors to `https://central.isample.xyz/isamples_central/`, the API is currently offline
+- **Workaround**: Use the geoparquet examples in `examples/basic/geoparquet.ipynb` and `examples/basic/isample-archive.ipynb` which work without API access
+- **Alternative data sources**: The examples demonstrate accessing iSamples data via Zenodo archives and remote parquet files
+
+### Lonboard Visualization Issues
+- **Parameter errors**: In `record_counts.ipynb`, avoid using `zoom` and `center` parameters directly with `Map()` constructor
+- **Memory usage**: For large datasets, use the zoom-layered approach demonstrated in `geoparquet.ipynb`
+- **CRS warnings**: "No CRS exists on data" warnings are common but usually don't affect visualization
+
+### Environment Setup
+- **Node.js conflicts**: Multiple `package.json` files exist; use `poetry install --with examples` for Python dependencies
+- **Jupyter extensions**: Some notebooks require ipywidgets and sidecar extensions for full functionality

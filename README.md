@@ -41,14 +41,22 @@ Three client classes for different use cases:
 ### Key Examples
 
 - **`examples/basic/geoparquet.ipynb`** ⭐ - Advanced lonboard visualization with zoom-layered rendering
-- **`examples/basic/isample-archive.ipynb`** - Remote parquet analysis via DuckDB  
+- **`examples/basic/oc_parquet_analysis_enhanced.ipynb`** ⭐ - **NEW**: OpenContext property graph analysis with Ibis and DuckDB
+- **`examples/basic/isample-archive.ipynb`** - Remote parquet analysis via DuckDB
 - **`examples/basic/record_counts.ipynb`** - Quick visualization patterns
+- **`examples/basic/oc_parquet_analysis.ipynb`** - Basic OpenContext parquet exploration
+
+The enhanced OpenContext notebook demonstrates:
+- **Property graph traversal** through complex multi-hop joins
+- **Ibis vs raw SQL** comparison for readable query construction
+- **Corrected relationship paths** for sample-to-location queries
+- **Performance optimization** techniques for 11M+ row datasets
 
 See [examples/README.md](examples/README.md) for detailed notebook descriptions.
 
 ## Technology Stack
 
-- **Spatial Analysis**: GeoPandas, DuckDB, Shapely, Ibis
+- **Spatial Analysis**: GeoPandas, DuckDB, Shapely, **Ibis** (new)
 - **Visualization**: Lonboard, Matplotlib, Folium, Cartopy
 - **Data Processing**: Pandas, Polars, PyArrow
 - **Jupyter Ecosystem**: IPyWidgets, IPyDatagrid, Sidecar

@@ -96,10 +96,12 @@ MaterialSampleRecord --[has_context_category]--> IdentifiedConcept
 
 ## Common Query Patterns
 
-### 1. Get All Samples with Direct Locations
+### 1. Get All Samples with Direct Locations (CORRECTED)
+
+**⚠️ Note**: The correct path is Sample → Event → Location, not direct Sample → Location.
 
 ```sql
--- Find samples with direct geographic coordinates
+-- CORRECTED: Find samples with geographic coordinates through SamplingEvent
 WITH sample_locations AS (
     SELECT
         s.pid as sample_id,
@@ -108,15 +110,41 @@ WITH sample_locations AS (
         g.longitude,
         g.place_name
     FROM oc_pqg s
-    JOIN oc_pqg e ON s.row_id = e.s  -- Join through edge
-    JOIN oc_pqg g ON e.o[1] = g.row_id  -- Join to location
+    JOIN oc_pqg e1 ON s.row_id = e1.s AND e1.p = 'produced_by'
+    JOIN oc_pqg event ON e1.o[1] = event.row_id
+    JOIN oc_pqg e2 ON event.row_id = e2.s AND e2.p = 'sample_location'
+    JOIN oc_pqg g ON e2.o[1] = g.row_id
     WHERE s.otype = 'MaterialSampleRecord'
-      AND e.otype = '_edge_'
-      AND e.p = 'sample_location'
+      AND event.otype = 'SamplingEvent'
       AND g.otype = 'GeospatialCoordLocation'
+      AND g.latitude IS NOT NULL
 )
-SELECT * FROM sample_locations
-WHERE latitude IS NOT NULL;
+SELECT * FROM sample_locations;
+```
+
+**Using Ibis (more readable for complex joins):**
+```python
+# Step 1: Define base tables
+samples = oc_pqg.filter(_.otype == 'MaterialSampleRecord')
+events = oc_pqg.filter(_.otype == 'SamplingEvent')
+locations = oc_pqg.filter(_.otype == 'GeospatialCoordLocation')
+edges = oc_pqg.filter(_.otype == '_edge_')
+
+# Step 2: Build the join chain
+result = (
+    samples
+    .join(edges.filter(_.p == 'produced_by'), samples.row_id == edges.s)
+    .join(events, edges.o[0] == events.row_id)
+    .join(edges.filter(_.p == 'sample_location'), events.row_id == edges.s)
+    .join(locations.filter(_.latitude.notnull()), edges.o[0] == locations.row_id)
+    .select(
+        sample_id=samples.pid,
+        sample_label=samples.label,
+        latitude=locations.latitude,
+        longitude=locations.longitude,
+        place_name=locations.place_name
+    )
+)
 ```
 
 ### 2. Trace Sample to Site Location
@@ -340,19 +368,53 @@ WHERE otype = 'GeospatialCoordLocation'
 GROUP BY obfuscated;
 ```
 
+## Using Ibis vs Raw SQL
+
+### When to Use Ibis
+**Recommended for:**
+- Complex multi-step joins (3+ tables)
+- Iterative query development and debugging
+- Teams that prefer Python over SQL
+- Integration with pandas/polars workflows
+- Type-safe query construction
+
+**Benefits:**
+- More readable code for complex operations
+- Better IDE support (auto-completion, syntax highlighting)
+- Modular, reusable query components
+- Easier debugging through step-by-step construction
+- Type safety catches errors early
+
+### When to Use Raw SQL
+**Recommended for:**
+- Simple queries (1-2 table joins)
+- Performance-critical applications
+- Teams comfortable with SQL
+- Quick ad-hoc analysis
+- Direct database interaction
+
+### Performance Comparison
+- **Ibis overhead**: ~5-10% slower due to Python layer
+- **SQL compilation**: Ibis generates equivalent SQL queries
+- **Memory usage**: Similar for both approaches
+- **Development time**: Ibis often faster for complex queries
+
 ## Integration Notes
 
 ### For Jupyter Notebooks
-- Use DuckDB's Python API for direct parquet access
-- Leverage pandas DataFrames for analysis
-- Consider ipywidgets for interactive filtering
+- **Ibis + DuckDB**: Best for complex analysis workflows
+- **Raw SQL**: Good for simple queries and maximum performance
+- **Pandas integration**: Both approaches work well with DataFrames
+- **Interactive development**: Ibis excels for iterative query building
 
 ### For Web Visualization
 - Pre-aggregate data to reduce payload
 - Use the Cesium integration for 3D globe rendering
 - Consider progressive loading for large datasets
+- **Ibis benefit**: Easier to build dynamic aggregation queries
 
 ### For Graph Analysis
 - Export subgraphs to NetworkX or similar tools
 - Use the edge table structure for relationship analysis
 - Consider graph metrics (degree, centrality) for important nodes
+- **Ibis benefit**: More readable code for complex graph traversals

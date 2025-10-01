@@ -1,6 +1,6 @@
 # isamples-python
 
-Python client library and examples for working with iSamples geological data, with a focus on high-performance geoparquet analysis and visualization.
+Python client library and examples for working with iSamples material sample data across scientific domains (geology, biology, archaeology, etc.), with a focus on high-performance geoparquet analysis and visualization.
 
 ## Quick Start
 
@@ -17,13 +17,13 @@ jupyter lab examples/
 
 ## Overview
 
-This repository provides Python tools for analyzing geological sample data from the iSamples project. Originally designed to work with the iSamples API, it has evolved to focus on **offline-first, geoparquet-centric workflows** using modern spatial data tools.
+This repository provides Python tools for analyzing material sample data from the iSamples project. The iSamples metadata model is **domain-agnostic**, supporting samples from geology, biology, archaeology, environmental science, and other fields. Originally designed to work with the iSamples API, it has evolved to focus on **offline-first, geoparquet-centric workflows** using modern spatial data tools.
 
 ### Key Capabilities
 
 - **High-performance visualization** with [Lonboard](https://github.com/developmentseed/lonboard) WebGL mapping
 - **Efficient spatial queries** using DuckDB on remote parquet files
-- **Interactive Jupyter notebooks** for geological data exploration
+- **Interactive Jupyter notebooks** for cross-domain sample data exploration
 - **API-independent workflows** accessing data via HTTP range requests
 
 ## Architecture
@@ -41,7 +41,7 @@ Three client classes for different use cases:
 ### Key Examples
 
 - **`examples/basic/geoparquet.ipynb`** ⭐ - Advanced lonboard visualization with zoom-layered rendering
-- **`examples/basic/oc_parquet_analysis_enhanced.ipynb`** ⭐ - **NEW**: OpenContext property graph analysis with Ibis and DuckDB
+- **`examples/basic/oc_parquet_analysis_enhanced.ipynb`** ⭐ - **NEW**: iSamples property graph analysis using OpenContext archaeological data with Ibis and DuckDB
 - **`examples/basic/isample-archive.ipynb`** - Remote parquet analysis via DuckDB
 - **`examples/basic/record_counts.ipynb`** - Quick visualization patterns
 - **`examples/basic/oc_parquet_analysis.ipynb`** - Basic OpenContext parquet exploration
@@ -85,7 +85,7 @@ This repository is transitioning from API-dependent to **offline-first geoparque
 
 - ✅ Remote parquet processing via DuckDB HTTP range requests
 - ✅ High-performance WebGL visualization with Lonboard
-- ✅ Interactive geological data exploration notebooks
+- ✅ Interactive cross-domain sample data exploration notebooks
 - 🚧 API fallback mechanisms and error handling
 - 🚧 Consolidated development environment
 
@@ -109,6 +109,6 @@ See [CROSS_REPO_ALIGNMENT.md](CROSS_REPO_ALIGNMENT.md) for detailed integration 
 
 ## Related Projects
 
-- [iSamples](https://www.isamples.org/) - Internet of Samples project
+- [iSamples](https://www.isamples.org/) - Internet of Samples project (domain-agnostic material sample metadata)
 - [Lonboard](https://github.com/developmentseed/lonboard) - Fast geospatial visualization
 - [DuckDB](https://duckdb.org/) - High-performance analytical database

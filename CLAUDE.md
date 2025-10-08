@@ -104,9 +104,32 @@ The codebase uses a sophisticated parameter building system:
 - **Alternative data sources**: The examples demonstrate accessing iSamples data via Zenodo archives and remote parquet files
 
 ### Lonboard Visualization Issues
-- **Parameter errors**: In `record_counts.ipynb`, avoid using `zoom` and `center` parameters directly with `Map()` constructor
-- **Memory usage**: For large datasets, use the zoom-layered approach demonstrated in `geoparquet.ipynb`
-- **CRS warnings**: "No CRS exists on data" warnings are common but usually don't affect visualization
+
+**⚠️ CRITICAL: Lonboard 0.12+ API Breaking Change**
+
+Lonboard 0.12+ changed how map initialization works. The old `zoom` and `center` parameters cause `TypeError`.
+
+**OLD (BROKEN)**:
+```python
+viz(result, map_kwargs={"zoom": 1, "center": {"lat": 0, "lon": 0}})
+```
+
+**NEW (CORRECT for 0.12+)**:
+```python
+viz(result, map_kwargs={"view_state": {"zoom": 1, "latitude": 0, "longitude": 0}})
+```
+
+**Key changes**:
+- `zoom` and `center` must be nested inside `view_state`
+- `center: {lat, lon}` becomes flat `latitude` and `longitude` keys
+- Dynamic updates: `m.set_view_state(longitude=..., latitude=..., zoom=...)`
+- Animation: `m.fly_to(...)`
+
+**Other considerations**:
+- **Memory usage**: Always use `LIMIT` clauses when visualizing parquet data (e.g., `LIMIT 100000`)
+- **Performance**: For 6M+ row datasets, querying without LIMIT can cause 5+ minute hangs
+- **CRS warnings**: "No CRS exists on data" warnings are expected and can be ignored if lon/lat are WGS84
+- **Deprecated**: The `con` parameter to `viz()` is deprecated in newer versions
 
 ### Environment Setup
 - **Node.js conflicts**: Multiple `package.json` files exist; use `poetry install --with examples` for Python dependencies

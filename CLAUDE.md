@@ -72,6 +72,30 @@ Heavy emphasis on Jupyter notebook examples for data exploration:
 - **DuckDB integration**: Efficient remote parquet processing via HTTP range requests
 - **API-independent workflows**: Examples that work without central API access
 
+#### Notebook Editing & Version Control Tools
+**For Claude Code and Git Workflows**:
+
+1. **jupytext pairing** (recommended for active development):
+   - Pair `.ipynb` with `.py` companions: `~/bin/nb_pair.sh notebook.ipynb`
+   - Edit `.py` files to avoid token limits (no outputs in source)
+   - Auto-sync changes between `.ipynb` ↔ `.py`
+   - Commit `.py` files for clean git diffs
+   - See: `JUPYTEXT_WORKFLOW.md` for full guide
+
+2. **nb_source_diff.py** (for quick diffs):
+   - Diff notebooks without output noise: `nb-diff notebook.ipynb HEAD`
+   - Use for one-off comparisons or unpaired notebooks
+   - Tool location: `~/bin/nb_source_diff.py`
+
+**Quick Reference**: See `QUICKREF_NOTEBOOKS.md` for command cheatsheet
+
+**Recommended Workflow**:
+- When Claude Code hits token limits on `.ipynb` files → Edit the `.py` companion instead
+- Pair new notebooks immediately: `~/bin/nb_pair.sh notebook.ipynb`
+- **Commit BOTH files** to git (`.ipynb` for outputs, `.py` for clean diffs)
+- Review `.py` diffs for code changes, `.ipynb` for output changes
+- Sync after Claude edits: `~/bin/nb_pair.sh --sync notebook.ipynb`
+
 ### Dependencies Architecture
 - **Core dependencies**: httpx, requests, pandas, xarray, pysolr
 - **Spatial analysis**: geopandas, duckdb, polars, ibis-framework, shapely

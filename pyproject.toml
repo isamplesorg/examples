@@ -51,6 +51,9 @@ shapely = "*"
 lonboard = "*"
 palettable = "*"
 sidecar = "*"
+jupysql = {version = "*", extras = ["duckdb"]}
+duckdb-engine = "*"
+toml = "*"
 # datashader = "*"
 # spatialpandas = "*"
 

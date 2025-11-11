@@ -27,6 +27,7 @@ noidy = {git = "https://github.com/rdhyee/noidy.git", rev = "pip-package"}
 # isamples_client = {git = "https://github.com/rdhyee/isamples-python.git", rev = "exploratory"}
 xarray = "*"
 matplotlib = "*"
+seaborn = "*"
 pandas = "*"
 requests = "*"
 httpx = "*"

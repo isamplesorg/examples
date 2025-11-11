@@ -176,3 +176,10 @@ yarn-error.log*
 ~$*.docx
 ~$*.pptx
 
+
+# DuckDB temporary storage
+.tmp/
+duckdb_temp_storage*.tmp
+
+# Large data files (use remote parquet instead)
+*.parquet

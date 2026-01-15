@@ -16,3 +16,13 @@ for class_name in __ALL__:
     globals()[class_name] = getattr(
         importlib.import_module(".isbclient", package=__name__), class_name
     )
+
+# Source API clients for direct data source access
+from .sources import (
+    BaseSourceClient,
+    SampleRecord,
+    OpenContextClient,
+    SESARClient,
+    GEOMEClient,
+    SmithsonianClient,
+)

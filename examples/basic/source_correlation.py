@@ -47,9 +47,16 @@ from isamples_client.sources import (
     SampleRecord,
 )
 
-# Parquet file URLs (Cloudflare R2)
-NARROW_URL = "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202512_narrow.parquet"
-WIDE_URL = "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202601_wide.parquet"
+# Parquet file paths - use local files if available, fallback to Cloudflare R2
+import os
+LOCAL_WIDE = os.path.expanduser("~/Data/iSample/pqg_refining/zenodo_wide_2026-01-09.parquet")
+LOCAL_NARROW = os.path.expanduser("~/Data/iSample/pqg_refining/zenodo_narrow_2025-12-12.parquet")
+
+# Use local files if they exist, otherwise use remote URLs
+NARROW_URL = LOCAL_NARROW if os.path.exists(LOCAL_NARROW) else "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202512_narrow.parquet"
+WIDE_URL = LOCAL_WIDE if os.path.exists(LOCAL_WIDE) else "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202601_wide.parquet"
+
+print(f"Using parquet: {WIDE_URL}")
 
 # Initialize DuckDB connection
 con = duckdb.connect()

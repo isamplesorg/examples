@@ -160,6 +160,9 @@ class GEOMEClient(BaseSourceClient):
         """
         Find samples near a geographic point.
 
+        Note: GEOME stores coordinates in Event entities, not Sample entities.
+        This method queries Events and returns them as SampleRecords.
+
         Args:
             latitude: Center latitude in decimal degrees
             longitude: Center longitude in decimal degrees
@@ -182,13 +185,15 @@ class GEOMEClient(BaseSourceClient):
         min_lon = longitude - lon_delta
         max_lon = longitude + lon_delta
 
-        # GEOME query syntax for bounding box
+        # GEOME uses Lucene range syntax [min TO max]
+        # Coordinates are stored in Event entity, not Sample
         query = (
-            f"decimalLatitude:>={min_lat} AND decimalLatitude:<={max_lat} "
-            f"AND decimalLongitude:>={min_lon} AND decimalLongitude:<={max_lon}"
+            f"decimalLatitude:[{min_lat} TO {max_lat}] "
+            f"AND decimalLongitude:[{min_lon} TO {max_lon}]"
         )
 
-        yield from self.search(query, max_results=max_results)
+        # Query Event entity since that's where coordinates are stored
+        yield from self.search(query, max_results=max_results, entity="Event")
 
     def list_projects(self, max_results: int = 100) -> Iterator[dict]:
         """
@@ -298,14 +303,19 @@ class GEOMEClient(BaseSourceClient):
 
         Args:
             record: Raw GEOME record
-            entity: Entity type
+            entity: Entity type ('Sample', 'Event', 'Tissue', etc.)
 
         Returns:
             Parsed SampleRecord or None
         """
         try:
-            identifier = record.get("bcid", record.get("materialSampleID", ""))
-            label = record.get("materialSampleID", record.get("sampleID", identifier))
+            identifier = record.get("bcid", record.get("materialSampleID", record.get("eventID", "")))
+
+            # Label depends on entity type
+            if entity == "Event":
+                label = record.get("locality", record.get("eventID", identifier))
+            else:
+                label = record.get("materialSampleID", record.get("sampleID", identifier))
 
             # Extract coordinates
             lat = record.get("decimalLatitude")

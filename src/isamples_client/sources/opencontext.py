@@ -118,22 +118,19 @@ class OpenContextClient(BaseSourceClient):
 
     def get_sample(self, identifier: str) -> Optional[SampleRecord]:
         """
-        Fetch a single sample by its OpenContext URI or UUID.
+        Fetch a single sample by its OpenContext URI, UUID, or ARK identifier.
 
         Args:
-            identifier: OpenContext URI (e.g., "https://opencontext.org/subjects/...")
-                       or UUID
+            identifier: OpenContext identifier in various formats:
+                       - Full URI: "https://opencontext.org/subjects/..."
+                       - UUID: "08d66911-4a4d-4c2d-816e-eee366830a9a"
+                       - ARK: "ark:/28722/k2zg70v1g"
+                       - N2T URL: "https://n2t.net/ark:/28722/..."
 
         Returns:
             SampleRecord if found, None otherwise
         """
-        # Handle both full URIs and UUIDs
-        if identifier.startswith("http"):
-            url = identifier
-            if not url.endswith(".json"):
-                url = url.rstrip("/") + ".json"
-        else:
-            url = f"{self.base_url}/subjects/{identifier}.json"
+        url = self._resolve_identifier_to_url(identifier)
 
         try:
             response = self.client.get(url)
@@ -145,6 +142,57 @@ class OpenContextClient(BaseSourceClient):
         except Exception as e:
             logger.warning(f"Failed to fetch OpenContext sample {identifier}: {e}")
             return None
+
+    def _resolve_identifier_to_url(self, identifier: str) -> str:
+        """
+        Resolve various identifier formats to an OpenContext JSON URL.
+
+        Handles:
+        - Full OpenContext URLs
+        - UUIDs
+        - ARK identifiers (resolved via n2t.net)
+        - N2T URLs
+
+        Args:
+            identifier: Identifier in any supported format
+
+        Returns:
+            URL to fetch JSON data from
+        """
+        identifier = identifier.strip()
+
+        # Handle ARK identifiers (need to resolve via n2t.net)
+        if identifier.startswith("ark:/"):
+            # Resolve ARK through Name-to-Thing resolver
+            n2t_url = f"https://n2t.net/{identifier}"
+            try:
+                # Make a HEAD request to get the redirect URL
+                response = self.client.head(n2t_url, follow_redirects=True)
+                # Use the final URL after redirects
+                resolved_url = str(response.url)
+                if "opencontext.org" in resolved_url:
+                    return resolved_url.rstrip("/") + ".json"
+            except Exception as e:
+                logger.debug(f"Failed to resolve ARK {identifier}: {e}")
+            # Fallback: try direct URL
+            return f"{self.base_url}/subjects/{identifier}.json"
+
+        # Handle full URLs
+        if identifier.startswith("http"):
+            url = identifier
+            # Handle n2t.net URLs
+            if "n2t.net" in url:
+                try:
+                    response = self.client.head(url, follow_redirects=True)
+                    url = str(response.url)
+                except Exception:
+                    pass
+            if not url.endswith(".json"):
+                url = url.rstrip("/") + ".json"
+            return url
+
+        # Assume it's a UUID
+        return f"{self.base_url}/subjects/{identifier}.json"
 
     def get_samples_by_location(
         self,
@@ -310,6 +358,15 @@ class OpenContextClient(BaseSourceClient):
                     if len(coords) >= 2:
                         lon, lat = coords[0], coords[1]
 
+            # Extract project info (may be a list or dict)
+            project = None
+            is_part_of = data.get("dc-terms:isPartOf")
+            if is_part_of:
+                if isinstance(is_part_of, list) and is_part_of:
+                    project = is_part_of[0].get("label")
+                elif isinstance(is_part_of, dict):
+                    project = is_part_of.get("label")
+
             return self._make_sample_record(
                 identifier=identifier,
                 label=label,
@@ -318,7 +375,7 @@ class OpenContextClient(BaseSourceClient):
                 latitude=lat,
                 longitude=lon,
                 material_type=data.get("category"),
-                project=data.get("dc-terms:isPartOf", {}).get("label"),
+                project=project,
             )
         except Exception as e:
             logger.warning(f"Failed to parse OpenContext single record: {e}")

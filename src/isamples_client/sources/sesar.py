@@ -115,7 +115,10 @@ class SESARClient(BaseSourceClient):
         Fetch a single sample by its IGSN.
 
         Args:
-            igsn: International Geo Sample Number (e.g., "IEWFS0001")
+            igsn: International Geo Sample Number in various formats:
+                  - Short: "BMC000001"
+                  - With prefix: "IGSN:BMC000001"
+                  - DOI format: "10.58052/BMC000001"
 
         Returns:
             SampleRecord if found, None otherwise
@@ -123,7 +126,41 @@ class SESARClient(BaseSourceClient):
         # Normalize IGSN
         igsn_value = self._normalize_igsn(igsn)
 
-        # Try JSON-LD endpoint first (preferred)
+        # Try the new app.geosamples.org JSON endpoint (current as of 2025)
+        # Format: https://app.geosamples.org/sample/igsn/10.58052/{IGSN}?format=json
+        full_igsn = f"10.58052/{igsn_value}"
+        url = f"{self.APP_URL}/sample/igsn/{full_igsn}"
+        params = {"format": "json"}
+
+        try:
+            response = self.client.get(url, params=params)
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+
+            # Check if response is actually JSON (SESAR sometimes returns HTML)
+            content_type = response.headers.get("content-type", "")
+            if "json" not in content_type.lower():
+                logger.debug(f"SESAR returned non-JSON for {igsn_value}: {content_type}")
+                return self._get_sample_jsonld(igsn_value)
+
+            data = response.json()
+            return self._parse_app_json_record(data, igsn_value)
+        except Exception as e:
+            logger.debug(f"New SESAR endpoint failed for {igsn}: {e}")
+            # Fall back to legacy JSON-LD endpoint
+            return self._get_sample_jsonld(igsn_value)
+
+    def _get_sample_jsonld(self, igsn_value: str) -> Optional[SampleRecord]:
+        """
+        Fallback: fetch sample from JSON-LD endpoint.
+
+        Args:
+            igsn_value: IGSN value
+
+        Returns:
+            SampleRecord if found, None otherwise
+        """
         url = f"{self.base_url}/v1/sample/igsn-ev-json-ld/igsn/{igsn_value}"
         headers = {"Accept": "application/ld+json, application/json"}
 
@@ -135,9 +172,8 @@ class SESARClient(BaseSourceClient):
             data = response.json()
             return self._parse_jsonld_record(data, igsn_value)
         except Exception as e:
-            logger.warning(f"Failed to fetch SESAR sample {igsn}: {e}")
-            # Fall back to app.geosamples.org
-            return self._get_sample_app(igsn_value)
+            logger.warning(f"Failed to fetch SESAR sample {igsn_value}: {e}")
+            return None
 
     def _get_sample_app(self, igsn_value: str) -> Optional[SampleRecord]:
         """
@@ -259,6 +295,56 @@ class SESARClient(BaseSourceClient):
 
         except Exception as e:
             logger.warning(f"SESAR user query failed: {e}")
+
+    def _parse_app_json_record(
+        self, data: dict, igsn: str
+    ) -> Optional[SampleRecord]:
+        """
+        Parse JSON from the app.geosamples.org/sample/igsn endpoint.
+
+        Args:
+            data: JSON response with 'sample' key
+            igsn: IGSN identifier
+
+        Returns:
+            Parsed SampleRecord or None
+        """
+        try:
+            sample = data.get("sample", data)
+
+            label = sample.get("sample_name", f"IGSN:{igsn}")
+            sample_type = sample.get("sample_type")
+            material = sample.get("material")
+
+            # Extract coordinates
+            lat, lon = None, None
+            lat_str = sample.get("latitude")
+            lon_str = sample.get("longitude")
+            if lat_str and lat_str != "Not Provided":
+                lat = float(lat_str)
+            if lon_str and lon_str != "Not Provided":
+                lon = float(lon_str)
+
+            # Parse collection date
+            collection_date = None
+            date_str = sample.get("collection_start_date")
+            if date_str and date_str != "Not Provided":
+                collection_date = dateparser.parse(date_str)
+
+            return self._make_sample_record(
+                identifier=f"igsn:{igsn}",
+                label=label,
+                raw_data=data,
+                description=sample.get("description"),
+                latitude=lat,
+                longitude=lon,
+                material_type=material or sample_type,
+                collection_date=collection_date,
+                project=sample.get("field_program"),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to parse SESAR app JSON record: {e}")
+            return None
 
     def _parse_jsonld_record(
         self, data: dict, igsn: str

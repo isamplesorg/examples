@@ -4,6 +4,7 @@ lonboard>=0.10.0
 ipydatagrid
 geopandas
 duckdb
-pandas
+pandas>=2.0.0
 numpy
 ipywidgets
+pyarrow>=12.0.0

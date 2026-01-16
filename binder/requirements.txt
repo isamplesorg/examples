@@ -1,0 +1,9 @@
+# Binder environment requirements
+# Pin lonboard to version that supports _height parameter
+lonboard>=0.10.0
+ipydatagrid
+geopandas
+duckdb
+pandas
+numpy
+ipywidgets

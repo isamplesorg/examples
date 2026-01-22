@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 # Main dependencies here
-python = ">=3.9,<4.0"
+python = ">=3.10,<4.0"
 httpx = "*"
 requests = "*"
 dateparser = "*"
@@ -56,7 +56,7 @@ ibis-framework = {version = "*", extras = ["duckdb", "postgres", "mysql", "sqlit
 folium = "*"
 cartopy = "*"
 shapely = "*"
-lonboard = ">=0.10.0"
+lonboard = ">=0.13.0"
 palettable = "*"
 sidecar = "*"
 jupysql = {version = "*", extras = ["duckdb"]}

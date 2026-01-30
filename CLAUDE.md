@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## Development Commands
 
@@ -13,125 +13,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 - Run Python tests: `poetry run pytest tests/`
-- Run single test: `poetry run pytest tests/test_isbclient.py::test_field_names`
 - Test files are in `tests/` directory
-
-### Playwright Testing (Web Scraping)
-- Playwright tests located in `playwright/tests/`
-- Run Playwright tests: `cd playwright && npx playwright test`
-- View test reports: `cd playwright && npx playwright show-report`
-- Configuration: `playwright/playwright.config.js`
 
 ### Docker Development
 - Build and run Jupyter environment: `./run_docker.sh [port]`
-- Default port is 8890, custom port can be specified as first argument
-- Dockerfile creates a Jupyter environment with all dependencies installed
+- Default port is 8890
 
-## Current Status & Issues ⚠️
+## Repository Overview
 
-**IMPORTANT**: As of September 2025, the iSamples central API at `https://central.isample.xyz/isamples_central/` is offline. This affects all three client classes below. The repository is transitioning to **offline-first geoparquet workflows** - see examples in `examples/basic/geoparquet.ipynb` and `examples/basic/isample-archive.ipynb` for working patterns.
+This repository provides Jupyter notebooks for exploring **6.7M material samples** using geoparquet files. All data accessed via Cloudflare R2 - no API required.
 
-## Architecture Overview
+### Core Examples (`examples/basic/`)
 
-### Core Python Client (`src/isamples_client/`)
-The main Python package provides three client classes for interacting with the iSamples API:
+| Notebook | Purpose |
+|----------|---------|
+| `isamples_explorer.ipynb` ⭐ | Interactive explorer with faceted search, map/table views |
+| `geoparquet.ipynb` ⭐ | Advanced lonboard visualization with zoom-layered rendering |
+| `pqg_demo.ipynb` | Property graph queries with DuckDB |
+| `schema_comparison.ipynb` | Narrow vs wide format comparison |
+| `isample-archive.ipynb` | Remote parquet analysis via DuckDB |
 
-1. **`IsbClient`** (`isbclient.py:232-339`): Basic HTTP client using httpx
-   - Direct API interaction with `/thing/select` endpoint
-   - Methods: `field_names()`, `record_count()`, `facets()`, `pivot()`
+### Archived Code
 
-2. **`IsbClient2`** (`isbclient.py:341-586`): Enhanced Solr client using pysolr
-   - Extends IsbClient with more sophisticated search capabilities
-   - Supports complex filter queries (`_fq_from_kwargs()`)
-   - Default search parameters in `default_search_params()`
-   - Faceting and pivot table functionality
+| Location | Contents |
+|----------|----------|
+| `archive/defunct-api-client/` | Original API client (API offline since 2025) |
+| `archive/planning/` | Planning docs from API-to-parquet transition |
+| `examples/basic/archive/` | Superseded notebook experiments |
 
-3. **`ISamplesBulkHandler`** (`isbclient.py:588-683`): Bulk data operations
-   - Handles large dataset exports via authentication
-   - Methods: `create_download()`, `get_status()`, `download_file()`
-   - Loads bulk data into pandas DataFrames
+## Data Sources
 
-### Key Configuration Constants
-- `ISB_SERVER`: Default iSamples API endpoint
-- `FL_DEFAULT`: Default field list for search results
-- `FACET_FIELDS_DEFAULT`: Default faceting fields
-- `MAJOR_FIELDS`: UI field mappings
-- `ISAMPLES_SOURCES`: Available data sources (SESAR, OPENCONTEXT, GEOME, SMITHSONIAN)
+All data served from Cloudflare R2:
 
-### Examples Structure
-- **`examples/basic/`**: Basic API usage examples and Jupyter notebooks
-- **`examples/spatial/`**: Geospatial data analysis with geoparquet, DuckDB
-- **`examples/opencontext/`**: OpenContext-specific examples
-- **`javascript/`**: JavaScript/Node.js integration examples
+```python
+# Wide format (~280 MB, 20M rows) - preferred
+WIDE_URL = "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202601_wide.parquet"
 
-### Jupyter Notebook Integration
-Heavy emphasis on Jupyter notebook examples for data exploration:
-- Interactive data analysis with pandas, xarray
-- Geospatial analysis using geopandas, folium, cartopy
-- **Lonboard WebGL visualization**: High-performance point cloud rendering
-- **DuckDB integration**: Efficient remote parquet processing via HTTP range requests
-- **API-independent workflows**: Examples that work without central API access
+# Narrow format (~850 MB, 106M rows) - includes edge rows
+NARROW_URL = "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202512_narrow.parquet"
+```
 
-#### Notebook Editing & Version Control Tools
+**Source counts:**
+- SESAR: 4.6M geological samples
+- OpenContext: 1M archaeological samples
+- GEOME: 605K genomic samples
+- Smithsonian: 322K museum specimens
+
+## Notebook Editing & Version Control
+
 **For Claude Code and Git Workflows**:
 
 1. **jupytext pairing** (recommended for active development):
    - Pair `.ipynb` with `.py` companions: `~/bin/nb_pair.sh notebook.ipynb`
    - Edit `.py` files to avoid token limits (no outputs in source)
-   - Auto-sync changes between `.ipynb` ↔ `.py`
-   - Commit `.py` files for clean git diffs
    - See: `JUPYTEXT_WORKFLOW.md` for full guide
 
 2. **nb_source_diff.py** (for quick diffs):
    - Diff notebooks without output noise: `nb-diff notebook.ipynb HEAD`
-   - Use for one-off comparisons or unpaired notebooks
-   - Tool location: `~/bin/nb_source_diff.py`
 
 **Quick Reference**: See `QUICKREF_NOTEBOOKS.md` for command cheatsheet
 
-**Recommended Workflow**:
-- When Claude Code hits token limits on `.ipynb` files → Edit the `.py` companion instead
-- Pair new notebooks immediately: `~/bin/nb_pair.sh notebook.ipynb`
-- **Commit BOTH files** to git (`.ipynb` for outputs, `.py` for clean diffs)
-- Review `.py` diffs for code changes, `.ipynb` for output changes
-- Sync after Claude edits: `~/bin/nb_pair.sh --sync notebook.ipynb`
+## Technology Stack
 
-### Dependencies Architecture
-- **Core dependencies**: httpx, requests, pandas, xarray, pysolr
-- **Spatial analysis**: geopandas, duckdb, polars, ibis-framework, shapely
-- **Visualization**: matplotlib, folium, cartopy, ipyleaflet, lonboard
-- **Jupyter ecosystem**: ipywidgets, ipydatagrid, sidecar
+- **Queries**: DuckDB on remote parquet via HTTP range requests
+- **Visualization**: Lonboard (WebGL), Matplotlib, Folium, Cartopy
+- **Data Processing**: Pandas, GeoPandas, Polars, Ibis
+- **Jupyter**: IPyWidgets, IPyDatagrid, Sidecar
 
-## Development Patterns
+## Known Issues
 
-### Search Parameter Building
-The codebase uses a sophisticated parameter building system:
-- `_fq_from_kwargs()` builds Solr filter queries from keyword arguments
-- Uses `multidict.MultiDict` for handling multiple values for same parameter
-- Supports date range queries, source filtering, and complex boolean logic
+### Lonboard 0.12+ API Breaking Change
 
-### Error Handling and Logging
-- Uses Python `logging` module (configured at INFO level)
-- Request URLs are logged for debugging
-- HTTP status codes checked with appropriate error raising
-
-### Monkey Patching for Large Queries
-- `monkey_patch_select()` modifies pysolr to handle large queries via POST
-- `SWITCH_TO_POST` threshold (10000 bytes) determines GET vs POST usage
-- Critical for handling complex search queries that exceed URL limits
-
-## Known Issues & Troubleshooting
-
-### API Connectivity Issues
-- **Central API offline**: If you see connection errors to `https://central.isample.xyz/isamples_central/`, the API is currently offline
-- **Workaround**: Use the geoparquet examples in `examples/basic/geoparquet.ipynb` and `examples/basic/isample-archive.ipynb` which work without API access
-- **Alternative data sources**: The examples demonstrate accessing iSamples data via Zenodo archives and remote parquet files
-
-### Lonboard Visualization Issues
-
-**⚠️ CRITICAL: Lonboard 0.12+ API Breaking Change**
-
-Lonboard 0.12+ changed how map initialization works. The old `zoom` and `center` parameters cause `TypeError`.
+Lonboard 0.12+ changed how map initialization works.
 
 **OLD (BROKEN)**:
 ```python
@@ -143,18 +96,8 @@ viz(result, map_kwargs={"zoom": 1, "center": {"lat": 0, "lon": 0}})
 viz(result, map_kwargs={"view_state": {"zoom": 1, "latitude": 0, "longitude": 0}})
 ```
 
-**Key changes**:
-- `zoom` and `center` must be nested inside `view_state`
-- `center: {lat, lon}` becomes flat `latitude` and `longitude` keys
-- Dynamic updates: `m.set_view_state(longitude=..., latitude=..., zoom=...)`
-- Animation: `m.fly_to(...)`
+### Performance Tips
 
-**Other considerations**:
-- **Memory usage**: Always use `LIMIT` clauses when visualizing parquet data (e.g., `LIMIT 100000`)
-- **Performance**: For 6M+ row datasets, querying without LIMIT can cause 5+ minute hangs
-- **CRS warnings**: "No CRS exists on data" warnings are expected and can be ignored if lon/lat are WGS84
-- **Deprecated**: The `con` parameter to `viz()` is deprecated in newer versions
-
-### Environment Setup
-- **Node.js conflicts**: Multiple `package.json` files exist; use `poetry install --with examples` for Python dependencies
-- **Jupyter extensions**: Some notebooks require ipywidgets and sidecar extensions for full functionality
+- **Always use `LIMIT`** when visualizing parquet data (e.g., `LIMIT 100000`)
+- Querying 6M+ rows without LIMIT can cause 5+ minute hangs
+- CRS warnings ("No CRS exists on data") can be ignored if lon/lat are WGS84

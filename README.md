@@ -1,6 +1,6 @@
 # isamples-python
 
-Python client library and examples for working with iSamples material sample data across scientific domains (geology, biology, archaeology, etc.), with a focus on high-performance geoparquet analysis and visualization.
+Python examples for exploring **6.7 million material samples** from scientific collections worldwide using high-performance geoparquet analysis and visualization.
 
 ## Quick Start
 
@@ -8,62 +8,60 @@ Python client library and examples for working with iSamples material sample dat
 # Install dependencies
 poetry install --with examples
 
-# Activate environment  
+# Activate environment
 poetry shell
 
 # Launch Jupyter for examples
-jupyter lab examples/
+jupyter lab examples/basic/
 ```
 
 ## Overview
 
-This repository provides Python tools for analyzing material sample data from the iSamples project. The iSamples metadata model is **domain-agnostic**, supporting samples from geology, biology, archaeology, environmental science, and other fields. Originally designed to work with the iSamples API, it has evolved to focus on **offline-first, geoparquet-centric workflows** using modern spatial data tools.
+This repository provides Jupyter notebooks for analyzing material sample data from the iSamples project. The iSamples metadata model is **domain-agnostic**, supporting samples from geology, biology, archaeology, environmental science, and other fields.
 
-### Key Capabilities
+**Data Sources:**
+- **SESAR**: 4.6M geological samples
+- **OpenContext**: 1M archaeological samples
+- **GEOME**: 605K genomic samples
+- **Smithsonian**: 322K museum specimens
 
-- **High-performance visualization** with [Lonboard](https://github.com/developmentseed/lonboard) WebGL mapping
-- **Efficient spatial queries** using DuckDB on remote parquet files
-- **Interactive Jupyter notebooks** for cross-domain sample data exploration
-- **API-independent workflows** accessing data via HTTP range requests
+All data accessed via **geoparquet files** on Cloudflare R2 - no API required.
 
-## Architecture
+## Key Examples
 
-### Python Client Library (`src/isamples_client/`)
+| Notebook | Description |
+|----------|-------------|
+| **`isamples_explorer.ipynb`** ⭐ | Interactive explorer with faceted search, map/table views |
+| **`geoparquet.ipynb`** ⭐ | Advanced lonboard visualization with zoom-layered rendering |
+| **`pqg_demo.ipynb`** | Property graph queries with DuckDB |
+| **`schema_comparison.ipynb`** | Narrow vs wide format comparison |
+| **`isample-archive.ipynb`** | Remote parquet analysis via DuckDB |
 
-Three client classes for different use cases:
-
-1. **`IsbClient`**: Basic HTTP client using httpx
-2. **`IsbClient2`**: Enhanced Solr client with complex query support  
-3. **`ISamplesBulkHandler`**: Bulk data operations with authentication
-
-**Note**: API clients currently target `https://central.isample.xyz/isamples_central/` which may be offline. See [STATUS.md](STATUS.md) for current issues and workarounds.
-
-### Key Examples
-
-- **`examples/basic/geoparquet.ipynb`** ⭐ - Advanced lonboard visualization with zoom-layered rendering
-- **`examples/basic/oc_parquet_analysis_enhanced.ipynb`** ⭐ - **NEW**: iSamples property graph analysis using OpenContext archaeological data with Ibis and DuckDB
-- **`examples/basic/isample-archive.ipynb`** - Remote parquet analysis via DuckDB
-- **`examples/basic/record_counts.ipynb`** - Quick visualization patterns
-- **`examples/basic/oc_parquet_analysis.ipynb`** - Basic OpenContext parquet exploration
-
-The enhanced OpenContext notebook demonstrates:
-- **Property graph traversal** through complex multi-hop joins
-- **Ibis vs raw SQL** comparison for readable query construction
-- **Corrected relationship paths** for sample-to-location queries
-- **Performance optimization** techniques for 11M+ row datasets
-
-See [examples/README.md](examples/README.md) for detailed notebook descriptions.
+See [examples/README.md](examples/README.md) for detailed descriptions.
 
 ## Technology Stack
 
-- **Spatial Analysis**: GeoPandas, DuckDB, Shapely, **Ibis** (new)
-- **Visualization**: Lonboard, Matplotlib, Folium, Cartopy
-- **Data Processing**: Pandas, Polars, PyArrow
-- **Jupyter Ecosystem**: IPyWidgets, IPyDatagrid, Sidecar
+- **Queries**: DuckDB on remote parquet via HTTP range requests
+- **Visualization**: Lonboard (WebGL), Matplotlib, Folium
+- **Data Processing**: Pandas, GeoPandas, Polars
+- **Jupyter**: IPyWidgets, IPyDatagrid, Sidecar
+
+## Data Access
+
+All examples use parquet files served from Cloudflare R2:
+
+```python
+import duckdb
+
+# Wide format (~280 MB, 20M rows)
+WIDE_URL = "https://pub-a18234d962364c22a50c787b7ca09fa5.r2.dev/isamples_202601_wide.parquet"
+
+# Query directly - DuckDB fetches only needed data
+con = duckdb.connect()
+df = con.sql(f"SELECT * FROM '{WIDE_URL}' WHERE n = 'OPENCONTEXT' LIMIT 1000").df()
+```
 
 ## Development
-
-### Commands
 
 ```bash
 # Install with examples dependencies
@@ -72,43 +70,19 @@ poetry install --with examples
 # Run tests
 poetry run pytest tests/
 
-# Run Playwright tests (web scraping)
-cd playwright && npx playwright test
-
 # Docker Jupyter environment
 ./run_docker.sh [port]  # default port 8890
 ```
 
-### Current Focus: Geoparquet Workflows
+## Archived Code
 
-This repository is transitioning from API-dependent to **offline-first geoparquet analysis**:
+The original API client (`src/isamples_client/`) targeted `https://central.isample.xyz/isamples_central/` which is **no longer operational**. This code has been moved to `archive/defunct-api-client/` for historical reference.
 
-- ✅ Remote parquet processing via DuckDB HTTP range requests
-- ✅ High-performance WebGL visualization with Lonboard
-- ✅ Interactive cross-domain sample data exploration notebooks
-- 🚧 API fallback mechanisms and error handling
-- 🚧 Consolidated development environment
-
-See [STATUS.md](STATUS.md) for detailed WIP status and loose ends.
-
-## Ecosystem Integration
-
-### Companion Repository: [isamplesorg.github.io](https://github.com/isamplesorg/isamplesorg.github.io)
-**Public website with browser-based tutorials and documentation**
-
-**Complementary roles**:
-- 🔗 **This repo (`isamples-python`)**: Local development, advanced analysis, Python ecosystem
-- 🌐 **Website repo**: Public tutorials, universal browser access, educational content  
-
-**Shared technology**: Both use DuckDB + geoparquet for efficient data analysis
-- Same data sources (Zenodo archives, HTTP range requests)
-- Compatible visualization approaches (lonboard ↔ Observable Plot)
-- Coordinated development patterns
-
-See [CROSS_REPO_ALIGNMENT.md](CROSS_REPO_ALIGNMENT.md) for detailed integration strategy.
+Planning documents from the API-to-parquet transition are in `archive/planning/`.
 
 ## Related Projects
 
-- [iSamples](https://www.isamples.org/) - Internet of Samples project (domain-agnostic material sample metadata)
+- [isamplesorg.github.io](https://isamplesorg.github.io/) - Browser-based tutorials (same data, no installation)
+- [iSamples](https://www.isamples.org/) - Internet of Samples project
 - [Lonboard](https://github.com/developmentseed/lonboard) - Fast geospatial visualization
 - [DuckDB](https://duckdb.org/) - High-performance analytical database

@@ -140,18 +140,6 @@ result = conn.sql("SELECT * FROM 'remote_file.parquet' WHERE condition")
 gdf = result.to_df()
 ```
 
-### Error Handling for API Issues
-```python
-try:
-    # API-dependent code
-    client = IsbClient()
-    data = client.search()
-except requests.exceptions.ConnectionError:
-    # Fallback to local/remote parquet
-    print("API unavailable, using local data")
-    data = pd.read_parquet('backup_data.parquet')
-```
-
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -162,15 +150,12 @@ except requests.exceptions.ConnectionError:
 
 2. **Lonboard Map parameter errors**
    - Don't use `zoom` and `center` directly in `Map()` constructor
-   - Use layer-specific parameters instead
+   - Use `view_state` parameter instead (Lonboard 0.12+)
 
 3. **Memory issues with large datasets**
    - Use the zoom-layered approach from `geoparquet.ipynb`
+   - Always use `LIMIT` clauses: `LIMIT 100000`
    - Sample data before visualization: `gdf.sample(n=10000)`
-
-4. **API connection errors**
-   - Expected behavior - API is currently offline
-   - Use geoparquet examples for working patterns
 
 ### Performance Tips
 

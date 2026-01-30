@@ -80,9 +80,16 @@ The original API client (`src/isamples_client/`) targeted `https://central.isamp
 
 Planning documents from the API-to-parquet transition are in `archive/planning/`.
 
-## Related Projects
+## Related iSamples Repositories
 
-- [isamplesorg.github.io](https://isamplesorg.github.io/) - Browser-based tutorials (same data, no installation)
-- [iSamples](https://www.isamples.org/) - Internet of Samples project
+| Repo | Purpose | Start Here |
+|------|---------|------------|
+| [isamplesorg-metadata](https://github.com/isamplesorg/metadata) | Schema definition (8 types, 14 predicates) | `src/schemas/isamples_core.yaml` |
+| [isamplesorg.github.io](https://isamplesorg.github.io/) | Browser tutorials (DuckDB-WASM + Cesium) | `tutorials/isamples_explorer.qmd` |
+| [vocabularies](https://github.com/isamplesorg/vocabularies) | SKOS vocabulary terms | Material types, context categories |
+
+## Related Technologies
+
 - [Lonboard](https://github.com/developmentseed/lonboard) - Fast geospatial visualization
 - [DuckDB](https://duckdb.org/) - High-performance analytical database
+- [iSamples Project](https://www.isamples.org/) - Internet of Samples initiative

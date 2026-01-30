@@ -1,0 +1,75 @@
+[tool.poetry]
+name = "isamples-examples"
+version = "0.2.0"
+description = "Jupyter notebooks for exploring 6.7M material samples using geoparquet and DuckDB"
+authors = ["Raymond Yee <raymond.yee@gmail.com>"]
+readme = "README.md"
+packages = []  # No Python package - this repo provides examples only
+
+[tool.poetry.dependencies]
+# Core dependencies for running examples
+python = ">=3.10,<4.0"
+pandas = ">=2.0.0"
+duckdb = "*"
+geopandas = "*"
+pyarrow = ">=12.0.0"
+
+[tool.poetry.group.examples.dependencies]
+# Example code dependencies here
+jupyter = {version = "*", extras = ["lab", "classic", "nbclassic"]}
+noid = {git = "https://github.com/rdhyee/noid-1.git", rev = "master"}
+# PQG (Property Query Graph) - currently using test branch with typed edges
+# Note: pqg requires Python 3.11+
+pqg = {git = "https://github.com/rdhyee/pqg.git", rev = "claude/edge-node-spo-types-01Ads56AvTw5xTwcqhEydaxS", python = ">=3.11,<4.0"}
+# pqg = {git = "https://github.com/isamplesorg/pqg.git", rev = "main", python = ">=3.11,<4.0"}  # Switch to upstream once PR #6 is merged
+# pqg = {path = "../pqg", develop = true}  # For local development
+click = ">=8.1.3,<9.0.0"  # Updated for pqg compatibility (was 8.0.3)
+colorama = "0.4.4"
+pytest = "*"
+ezid_client_tools = {git = "https://github.com/rdhyee/ezid-client-tools.git", rev = "installable"}
+noidy = {git = "https://github.com/rdhyee/noidy.git", rev = "pip-package"}
+# isamples_client = {git = "https://github.com/rdhyee/isamples-python.git", rev = "exploratory"}
+xarray = "*"
+matplotlib = "*"
+seaborn = "*"
+pandas = ">=2.0.0"
+requests = "*"
+httpx = "*"
+multidict = "*"
+pysolr = "*"
+anywidget = {version = "*", extras = ["dev"]}
+ipyleaflet = "*"
+ipydatagrid = "*"
+ipywidgets = "*"
+openpyxl = "*"
+ipytree = "*"
+# jupytext = "1.16.3"
+geopandas = "*"
+pyarrow = ">=12.0.0"
+duckdb = "*"
+polars = "*"
+geopy = "*"
+linkml-runtime = "*"
+ibis-framework = {version = "*", extras = ["duckdb", "postgres", "mysql", "sqlite", "geospatial", "examples"]}
+folium = "*"
+cartopy = "*"
+shapely = "*"
+lonboard = ">=0.13.0"
+palettable = "*"
+sidecar = "*"
+jupysql = {version = "*", extras = ["duckdb"]}
+duckdb-engine = "*"
+toml = "*"
+# datashader = "*"
+# spatialpandas = "*"
+
+[tool.poetry.group.dev.dependencies]
+# Development dependencies here
+ipykernel = ">=6.29"  # for Jupyter notebook support
+
+[tool.poetry.group.test.dependencies]
+# Testing dependencies here
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

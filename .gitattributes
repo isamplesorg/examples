@@ -1,0 +1,12 @@
+# Jupyter notebook handling with jupytext
+#
+# Strategy: Pair .ipynb with .py companions
+# - .py files are git-diffable and Claude Code friendly
+# - .ipynb files contain outputs for local use
+# - Only .py files are meaningfully diffed in PRs
+
+# Use jupytext for notebook diffs (if available)
+*.ipynb diff=jupytext
+
+# Filter for showing clean diffs
+# (requires: git config diff.jupytext.command 'jupytext --to md --set-formats - -o -')

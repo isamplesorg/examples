@@ -1,10 +1,17 @@
-# Binder environment requirements
-# Pin lonboard to version that supports _height parameter
-lonboard>=0.10.0
-ipydatagrid
-geopandas
-duckdb
+# Binder environment for examples/basic/isamples_explorer.ipynb
+# (and the adjacent basic/ notebooks). Tracks what the notebooks
+# actually import. Keep minimal — Binder's base image provides
+# JupyterLab, ipykernel, IPython.
+
+# Data + query
+duckdb>=0.10
 pandas>=2.0.0
 numpy
-ipywidgets
 pyarrow>=12.0.0
+geopandas
+shapely
+
+# Visualization
+lonboard>=0.10.0          # _height + MaplibreBasemap
+ipydatagrid
+ipywidgets
